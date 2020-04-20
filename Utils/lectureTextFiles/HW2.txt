@@ -1,0 +1,262 @@
+ 
+  
+ 
+CS 370: OPERATING SYSTEMS Spring 20   Colorado State University 
+ 
+HW2: Programming Assignment   v1 2.8.2020.10:00AM  
+Working with Parent and Child processes 
+ 
+The objective of this assignment is to write and test a program with fork(), exec(), wait() and return 
+values of child processes. 
+Due Date: 2.20.2020 11 PM 
+Extended Due Date with 20% penalty: 2.21.2020 11 PM 
+1. Purpose 
+ 
+Write a C program called Starter that reads characters from a file, whose name may be provided as a 
+command line argument to the program. Starter forks up to three child processes for each character, 
+that will run programs LowAlpha, HighAlpha, and Math which will determine the type of each character 
+i.e. LowAlpha (first half of the alphabet, a-m or A-M), HighAlpha (second half of the alphabet, n-z or N-
+Z), Math (+ - * /), and Other (all other characters).  Do not mistake LowAlpha and HighAlpha for upper 
+case and lower case! 
+ 
+2. Description of assignment 
+ 
+You will be creating four programs: Starter.c, LowAlpha.c, HighAlpha.c, and Math.c.  
+ 
+Starter.c: Starter.c takes a mandatory argument that is the name of the .txt file which contains 
+a string. The Starter will read all the characters from the text file, and send each character to the child 
+processes for further processing.  
+ 
+a. The Starter is responsible for executing the fork() functions to launch the child process.  
+b. Each child process runs the exec() function to run the program needed (LowAlpha, HighAlpha, or 
+Math), while also supplying the arguments that the new program needs to complete its execution. 
+c. The wait() function is used to wait for the completion of the execution of the child processes, and 
+WEXITSTATUS(status) function is used to obtain the status (as an eight-bit integer) from the three 
+child programs. 
+The Starter then saves the status. After all the processes are complete the Starter will output the counts 
+of each type of characters (a code snippet is provided below). 
+ 
+LowAlpha.c, HighAlpha.c, Math.c:  Each of these programs receives one character as 
+an argument. They determine the type of each character and return the true/false status.  
+All print statements must indicate the program that is responsible for generating them. To do this, please 
+prefix your print statements with the program name. The Starter should indicate the process ID of the 
+child it forked, and the LowAlpha, HighAlpha, and Math programs should indicate their own process 
+ID. The example output section below depicts the expected format of the output and must be strictly 
+adhered to. 
+ 
+A good starting point is to implement the functionality for the LowAlpha.c, HighAlpha.c, and Math.c 
+programs, and then write the code to manage its execution using the Starter program. 
+ 
+ 
+ 
+ 
+ 
+  
+ 
+CS 370: OPERATING SYSTEMS Spring 20   Colorado State University 
+ 
+3. Input and Output[Wa1] 
+For example, the “input.txt” files contain the string “Todd + Connie”. 
+ 
+ 
+Use fopen() function to read the string from the file. 
+ 
+ 
+ 
+4. Task Requirements 
+ 
+1. The Starter must read the characters from the .txt file, the name of which will be passed as an 
+argument to it. Then send each character, one at a time, to the child processes. Each of the other 
+three programs must accept the string as an argument. 
+ 
+2. The Starter should spawn up to 3 processes using the fork() function for each character from 
+the input file and must ensure that one full cycle of fork(), exec() and wait() is completed for a 
+given process before it moves on to spawning a new process. 
+ 
+3. Once it has used the fork() function, the Starter will print out the process ID of the process that 
+it created. This can be retrieved by checking the return value of the fork() function. 
+ 
+4. Child-specific processing immediately follows. The exec() function loads the 
+LowAlpha/HighAlpha/Math program into the newly created process. This exec() function should 
+also pass the coded value to the LowAlpha/HighAlpha/Math program. For this assignment, it is 
+recommended that you use the execlp() function. The “man” page for exec (search for “man  
+exec”) gives details on the usage of the exec() family of functions. 
+ 
+5. When the LowAlpha/HighAlpha/Math program is executing, it prints out its process ID; this 
+should match the one returned by the fork() function in step 3. 
+ 
+6. The LowAlpha/HighAlpha/Math program then determines the type of each character and returns 
+the result. 
+ 
+7. LowAlpha/HighAlpha/Math program should return the result. Each status received by the 
+Starter should be used to determine the type of each character. You can use the WEXITSTATUS() 
+macro to determine the exit status code (see man 2 wait). 
+ 
+8. Parent-specific processing in the Starter should ensure that the Starter will wait() for each 
+instance of the child-specific processing to complete. Once all the processes are complete 
+output the total counts of each type of characters to the terminal. 
+ 
+9. For ease of grading, your program must fork()/exec() the programs in this order for each 
+character: LowAlpha, HighAlpha, Math.  In addition, for any one character, it must stop when it 
+has the answer.  For example, if the character is ‘Q’, it should invoke LowAlpha, which will report 
+false, then HighAlpha, which will report true.  At that point, since the answer is known (it’s a 
+HighAlpha), do not fork()/exec() Math for that character. 
+ 
+10. Also, for ease of grading, exclude the characters '\r' and '\n'  (CR and LF)  from all counts.  They’re 
+not LowAlpha, HighAlpha, Math, or Other.  They simply don’t count at all. (Note that the end of 
+a line is indicated differently in text files for Windows and Linux system.) 
+ 
+5. Example Outputs  
+1. This is the output when analyzing the file input.txt which contains the string “Todd + Connie” 
+(Note: your process IDs may be different) 
+ 
+  
+ 
+CS 370: OPERATING SYSTEMS Spring 20   Colorado State University 
+ 
+machine% ./Starter input.txt 
+Starter: Forked process with ID 19845. 
+Starter: Waiting for process [19845]. 
+LowAlpha[19845]: Received coded value 84. 
+LowAlpha[19845]: Result is false. 
+Starter: Child process 19845 returned false. 
+Starter: Forked process with ID 19846. 
+Starter: Waiting for process [19846]. 
+HighAlpha[19846]: Received coded value 84. 
+HighAlpha[19846]: Result is true. 
+Starter: Child process 19846 returned true. 
+Starter: Forked process with ID 19848. 
+Starter: Waiting for process [19848]. 
+. 
+. 
+. 
+Starter: Waiting for process [19880]. 
+Math[19880]: Received coded value 105. 
+Math[19880]: Result is false. 
+Starter: Child process 19880 returned false. 
+Starter: Forked process with ID 19881. 
+Starter: Waiting for process [19881]. 
+LowAlpha[19881]: Received coded value 101. 
+LowAlpha[19881]: Result is true. 
+Starter: Child process 19881 returned true. 
+Low alpha:  5 
+High alpha: 5 
+Math:       1 
+Other:      2 
+denver%  
+ 
+2. This is the output when analyzing the string “h2o!” (Note: your process IDs may be different) 
+ 
+denver% ./Starter input2.txt 
+Starter: Forked process with ID 19902. 
+Starter: Waiting for process [19902]. 
+LowAlpha[19902]: Received coded value 104. 
+LowAlpha[19902]: Result is true. 
+Starter: Child process 19902 returned true. 
+Starter: Forked process with ID 19905. 
+Starter: Waiting for process [19905]. 
+. 
+. 
+. 
+Starter: Forked process with ID 19908. 
+Starter: Waiting for process [19908]. 
+LowAlpha[19908]: Received coded value 111. 
+ 
+  
+ 
+CS 370: OPERATING SYSTEMS Spring 20   Colorado State University 
+ 
+LowAlpha[19908]: Result is false. 
+Starter: Child process 19908 returned false. 
+Starter: Forked process with ID 19909. 
+Starter: Waiting for process [19909]. 
+HighAlpha[19909]: Received coded value 111. 
+HighAlpha[19909]: Result is true. 
+Starter: Child process 19909 returned true. 
+Starter: Forked process with ID 19911. 
+Starter: Waiting for process [19911]. 
+LowAlpha[19911]: Received coded value 33. 
+LowAlpha[19911]: Result is false. 
+Starter: Child process 19911 returned false. 
+Starter: Forked process with ID 19912. 
+Starter: Waiting for process [19912]. 
+HighAlpha[19912]: Received coded value 33. 
+HighAlpha[19912]: Result is false. 
+Starter: Child process 19912 returned false. 
+Starter: Forked process with ID 19913. 
+Starter: Waiting for process [19913]. 
+Math[19913]: Received coded value 33. 
+Math[19913]: Result is false. 
+Starter: Child process 19913 returned false. 
+Low alpha:  1 
+High alpha: 1 
+Math:       0 
+Other:      2 
+denver%machine% 
+ 
+6. What to Submit 
+ 
+Use the CS370 Canvas to submit a single .zip or .tar file that contains: 
+ All .c and .h files listed below and descriptive comments within, 
+o Starter.c  
+o LowAlpha.c 
+o HighAlpha.c 
+o Math.c 
+ A Makefile that performs both a make build as well as a make clean. Note that you will have 
+four executables. 
+ A README.txt file containing a description of each file and any information you feel the grader 
+needs to grade your program, and answers for the 5 questions 
+ 
+For this and all subsequent assignments, you need to ensure that you have submitted a valid .zip/.tar 
+file. After submitting your file, you can download it and examine to make sure it is indeed a valid zip/tar 
+file, by trying to extract it. 
+Filename Convention: The archive file must be named as: <FirstName>-<LastName>-
+HW2.<tar/zip>. E.g. if you are John Doe and submitting for assignment 2, then the tar file should be 
+named John-Doe-HW2.tar  
+ 
+ 
+  
+ 
+CS 370: OPERATING SYSTEMS Spring 20   Colorado State University 
+ 
+7. Grading 
+The assignments much compile and function correctly on machines in the CSB-120 Lab. Assignments 
+that work on your laptop on your particular flavor of Linux/Mac OS X/Windows, but not on the Lab 
+machines are considered unacceptable. 
+The grading will also be done on a 100 point scale. The points are broken up as follows: 
+Objective Points 
+Correctly performing Tasks 1-10 (8 points each) 80 points 
+Descriptive comments 5 points 
+Compilation without warnings 5 points 
+Questions in the README file 5 points 
+Providing a working Makefile 5 points 
+ 
+Questions: (To be answered in README file. Each question worth 1 point) 
+1. How many of the least significant bits of the status does WEXITSTATUS return?    
+2. Which header file has to be included to use the WEXITSTATUS?   
+3. What is the return value for the fork() in a child process?   
+4. Give a reason for the fork() to fail?   
+5. In the program written by you, are we doing a sequential processing or a concurrent processing 
+with respect to the child processes? Sequential processing is when only one of the child processes 
+is running at one time, and concurrent processing is when more than one child process can be 
+running at the same time.  
+ 
+8. Late Policy 
+ 
+Click here for the class policy on submitting late assignments. 
+ 
+Notes:  
+1. You are required to work alone on this assignment.  
+2. Late Policy: There is a late penalty of 20%.  The late period is 24 hours. 
+3. You may assume that the text is limited to a single line, in order to keep the assignment simple.  
+4. Note that although WEXITSTATUS(status) is primarily intended for returning the status to the 
+parent, here we are exploiting this capability to transmit the result type from the child programs 
+to the parent program. 
+ 
+Revisions: Any revisions in the assignment will be noted below. 
+ 
+2/7/20 The example output updated to reflect implementation of task 10. 
+2/8/20 LowAlpha means a-mA-M, and HighAlpha means n-zN-Z. 
+2/8/20 The example output updated. 
+2/10/20 Task requirement 8 is revised to “output the total counts of each type of characters to 
+the terminal”. 

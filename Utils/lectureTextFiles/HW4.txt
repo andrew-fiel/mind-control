@@ -1,0 +1,276 @@
+ 
+ 
+ 
+CS 370: OPERATING SYSTEMS Spring 2020   Colorado State University 
+ 
+HW4: Programming Assignment   v1 03.06.2020.5:00PM 
+CPU SCHEDULING ALGORITHMS 
+ 
+The objective of this assignment is to become familiar with some of the basic CPU scheduling algorithms. 
+You will be implementing three scheduling algorithms while generating the Gantt charts and tracking 
+measures of effectiveness.  
+Due Date: Thursday, March 26, 2019, 11:00 pm 
+Extended Due Date with 20% penalty: Friday, March 27, 2019, 11:00 pm 
+ 
+1.     Description of Task 
+In this assignment, you will be implementing basic CPU scheduling algorithms specified below. The first 
+command line argument specifies the name of the scheduling algorithm. It could be one of the 
+following; SJF, PBS or RR. The second command line argument will be the file name, which contains 
+the list of processes for your scheduling algorithms.  The next command line argument specifies the 
+time quantum (for Round Robin). 
+Implement the following three CPU scheduling algorithms using either C or Python programming 
+language (python3). Assume that all jobs are CPU-bound (i.e., they do not block for I/O), and the 
+context-switching time is negligible. Also, assume that in Round Robin, if a new process arrives the same 
+instant when a process is switched out, the new process gets in the ready queue first.  
+• Shortest Job First (SJF)  (preemptive) 
+• Priority Based Scheduling (PBS) (non-preemptive).  
+• Round Robin (RR) with the specified quantum. 
+You must produce a Gantt chart for each scheduling algorithm to help visualize the sequence of 
+execution for each process (See example output below). You will analyze the performance of these 
+scheduling algorithms by tracking the turnaround time and waiting time for each process and printing 
+the average waiting time, average turnaround time and throughput after all processes have 
+completed.  
+ The turnaround time for a process is the difference between a job’s submission and completion 
+times. The average turnaround time reports the average for the set of processes that were 
+scheduled.  
+ 
+ The waiting time for a process reflects the total amount of time spent by that process in the 
+ready queue. The average waiting time reports the average for the set of processes that were 
+scheduled.  
+ 
+ The throughput for a scheduling algorithm measures the total number of tasks processes per 
+unit time.  
+ 
+2.   Task Requirements 
+1. Your program must accept three arguments from the command line.  
+ 
+ The first argument is the name of the algorithm, it could be one of the following; SJF, PBS, 
+RR.  
+ Second argument will be the name of the file containing the processes (for example: 
+processes.csv). This file is comma-separated with four columns (process ID, priority, arrival 
+time and burst time) with each row for an individual process. You can assume that this file 
+will have a maximum of 9 processes, although there may be less. The Process IDs will be 
+unique integers from 1–9 
+ 
+ 
+ 
+CS 370: OPERATING SYSTEMS Spring 2020   Colorado State University 
+ 
+ The third argument is an integer time quantum. It will always be provided, but it should be 
+ignored for everything but RR. 
+ 
+2. Your program (scheduler.c or scheduler.py) should be able to perform SJF (preemptive), PBS 
+(non-preemptive) and RR scheduling correctly based on the first argument provided. For instance, 
+if the scheduler was executed with the ollowing arguments, RR  processes.csv 4, then 
+your program should execute the Round Robin (RR) algorithm with the given time quantum 4 (3rd 
+argument).  
+In case of a tie, the process with the lower ID executes first. 
+ 
+3. Next, based on the first argument (SJF, PBS or RR), you should print a Gantt chart showing the 
+execution sequence using the format shown below (right align the number in the columns). Report 
+waiting time and turnaround time for each process. Also, report the average values for waiting 
+time, turnaround time and the overall throughput for all the processes. Make sure that floating-
+point output has only 3 decimal places. 
+ 
+Note: The processes in the file (second command line argument file) may be specified in such a way 
+that it may result in some IDLE time when there are no processes ready to be executed. During the IDLE 
+time the CPU has no processes to execute and waits for the next process to appear in the ready queue. 
+Your Gantt chart should include these IDLE times. Also, the first process need not start at time 0. At 
+time 0, there can be IDLE time in the Gantt chart till the first process arrives later on in time. 
+ 
+3.   Example Input 
+ 
+Input File: processes.csv  
+ 
+ProcessID,Priority,Arrival Time,Burst Time 
+2,4,0,5 
+3,2,0,3 
+1,1,9,8 
+4,3,10,6 
+ 
+Note: The first line in the processes.csv file has headers Process ID, Priority, Arrival Time, Burst Time. 
+ 
+4. Output 
+4.1  Example Output 1 
+ 
+<system_name>:<folder_path>$ ./scheduler SJF processes.csv 0 
+---------------- SJF ---------------------- 
+Process ID | Waiting Time | Turnaround Time 
+    1      |      6       |       14        
+    2      |      3       |        8        
+    3      |      0       |        3        
+    4      |      0       |        6       
+ 
+------ Gantt Chart ----- 
+Start | Process ID | End 
+  0   |     3      |  3 
+  3   |     2      |  8 
+  8   |    IDLE    |  9 
+  9   |     1      | 10 
+ 10   |     4      | 16 
+ 16   |     1      | 23 
+ 
+Average Waiting Time:  2.250 
+ 
+ 
+ 
+CS 370: OPERATING SYSTEMS Spring 2020   Colorado State University 
+ 
+Average Turnaround Time:  7.750  
+Throughput:  0.174  
+ 
+ 
+4.2   Example Output 2 
+ 
+<system_name>:<folder_path>$ ./scheduler PBS processes.csv 0 
+----------------- PBS --------------------- 
+Process ID | Waiting Time | Turnaround Time 
+    1      |      0       |        8 
+    2      |      3       |        8 
+    3      |      0       |        3 
+    4      |      7       |       13 
+ 
+------ Gantt Chart ----- 
+Start | Process ID | End 
+  0   |     3      |  3 
+  3   |     2      |  8 
+  8   |    IDLE    |  9 
+  9   |     1      | 17 
+ 17   |     4      | 23 
+ 
+Average Waiting Time:  2.500  
+Average Turnaround Time:  8.000  
+Throughput:  0.174  
+ 
+ 
+ 
+4.3 Example Output 3 
+ 
+<system_name>:<folder_path>$ ./scheduler RR processes.csv 4 
+-------------- Round Robin ---------------- 
+Process ID | Waiting Time | Turnaround Time 
+    1      |      4       |       12       
+    2      |      3       |        8        
+    3      |      4       |        7        
+    4      |      7       |       13       
+ 
+------ Gantt Chart ----- 
+Start | Process ID | End 
+  0   |     2      |  4 
+  4   |     3      |  7 
+  7   |     2      |  8 
+  8   |    IDLE    |  9 
+  9   |     1      | 13 
+ 13   |     4      | 17 
+ 17   |     1      | 21 
+ 21   |     4      | 23 
+ 
+Average Waiting Time:  4.500  
+Average Turnaround Time:  10.000  
+Throughput:  0.174 
+ 
+Note: While printing the Gantt Chart align the start and end times in a readable format. 
+ 
+The format for command line arguments for grading will be:  
+ 
+./scheduler <algorithm> <filename> <time quantum> 
+    
+The filename is the name of the file containing the information about all the processes. 
+ 
+ 
+ 
+ 
+ 
+CS 370: OPERATING SYSTEMS Spring 2020   Colorado State University 
+ 
+5.    What to Submit 
+Use the CS370 Canvas to submit a single .zip or .tar file that contains: 
+ All .c  or .py files with descriptive comments within, 
+ A Makefile that performs both a make build as well as a make 
+A python program scheduler.py must have this first line: 
+        #! /usr/bin/python3 
+ 
+The Makefile for a python program should contain: 
+         build: 
+             cp scheduler.py scheduler 
+             chmod +x scheduler 
+         clean: 
+             rm scheduler 
+ 
+Note that we will not execute ./scheduler.py.  If you have a file called scheduler.py, your 
+Makefile must copy it to scheduler. 
+ 
+ a README.txt file containing a description of each file and any information you feel the grader 
+needs to grade your program, and answers for the 5 questions 
+ 
+For this and all other assignments, ensure that you have submitted a valid .zip/.tar file. After submitting 
+your file, you can download it and examine to make sure it is indeed a valid zip/tar file, by trying to 
+extract it. 
+ 
+Filename Convention: The archive file must be called: <FirstName>-<LastName>-HW4.<tar/zip>. 
+E.g. if you are John Doe and submitting for assignment 4, then the tar file should be named John-Doe-
+HW4.tar or John-Doe-HW4.zip. 
+ 
+6.    Grading 
+ 
+The assignment must compile and function correctly on machines in the CSB-120 Lab. Assignments that 
+work on your laptop on your particular flavour of Linux/Mac OS X but not on the Lab machines are 
+considered unacceptable. 
+ 
+The grading will be done on a 100-point scale.  
+ 
+The points are broken up as follows: 
+ 
+Objective Points 
+SJF 12.5 points 
+Gantt Chart PBS 22.5 points 
+RR 32.5 points 
+SJF 2.5 points 
+Throughput PBS 2.5 points 
+RR 2.5 points 
+SJF 2.0 points 
+Waiting time PBS 2.0 points 
+RR 2.0 points 
+SJF 0.5 points 
+Average Waiting time PBS 0.5 points 
+RR 0.5 points 
+SJF 2.0 points  
+Turnaround Time 
+PBS 2.0 points 
+ 
+ 
+ 
+CS 370: OPERATING SYSTEMS Spring 2020   Colorado State University 
+ 
+RR 2.0 points 
+SJF 0.5 points 
+Average Turnaround time PBS 0.5 points 
+RR 0.5 points 
+Compilation with no warnings or errors 
+2 points 
+ 
+Suitable documentation of code in code files and README 
+3 points 
+ 
+Questions in the README file 
+5 points 
+ 
+Questions: (To be answered in README file) 
+ 
+1. What is the other name for Shortest Job First Preemptive Algorithm? 
+2. What are the 5 different states a process can be in scheduling (Look into process state 
+diagram)? 
+3. Shortest Job First is like Priority Scheduling with the priority based on ______ of the process? 
+4. ________ effect is the primary disadvantage of the First Come First Served Scheduling 
+algorithm. 
+5. How does Multi-Level Feedback queue prevent starvation of processes that waits too long in 
+lower priority queue? 
+ 
+You are required to work alone on this assignment. 
+ 
+7.    Late Policy 
+ 
+Click here for the class policy on submitting late assignments 
+ 
+Revisions: Any revisions in the assignment will be noted below. 
+3/6/2020: Deadline is March 26, since the week before is spring break. 

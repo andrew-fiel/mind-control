@@ -1,0 +1,499 @@
+CS370 Operating Systems
+Colorado State University
+Yashwant K Malaiya
+Spring 2020 Lecture 5 
+Processes
+Slides based on 
+• Text by Silberschatz, Galvin, Gagne
+• Various sources
+1 1
+FAQ
+System calls:
+• Function call -> subroutine. System call ->system 
+routine.
+• System call arguments passed using registers. Linux/x86 examples
+• POSIX API: compiled appropriately to assembly/binary.
+2
+Diagram of Process State
+Ready to Running: scheduled by scheduler
+Running to Ready: scheduler picks another process, back in ready queue
+Running to Waiting (Blocked) : process blocks for input/output
+Waiting to Ready: Input available
+3
+Process Control Block (PCB)
+Information associated with each process 
+(also called task control block)
+• Process state – running, waiting, etc
+• Program counter – location of 
+instruction to next execute
+• CPU registers – contents of all process-
+centric registers
+• CPU scheduling information- priorities, 
+scheduling queue pointers
+• Memory-management information –
+memory allocated to the process
+• Accounting information – CPU used, 
+clock time elapsed since start, time 
+limits
+• I/O status information – I/O devices 
+allocated to process, list of open files
+FAQ:     Where is PCB saved? 
+In memory area that is protected from  user access 
+perhaps as structs in a linked list.
+4
+CPU Switch From Process to Process
+5
+Threads
+• So far, process has a single thread of execution
+• Consider having multiple program counters per process
+– Multiple locations can execute at once
+• Multiple threads of control -> threads
+• Must then have storage for thread details, multiple 
+program counters in PCB
+• Coming up in next chapter
+6
+PCB Representation in Linux
+Represented by the C structure task_struct. 
+Fields may include
+pid t_pid; /* process identifier */ 
+long state; /* state of the process */ 
+unsigned int time_slice /* scheduling information */ 
+struct task_struct *parent; /* this process’s parent */ 
+struct list_head children; /* this process’s children */ 
+struct files_struct *files; /* list of open files */ 
+struct mm_struct *mm; /* address space of this process */
+Unlike an array, the elements of a struct can be of different data types
+7
+Process Scheduling
+• Maximize CPU use, quickly switch processes 
+onto CPU for time sharing
+• Process scheduler selects among available 
+processes for next execution on CPU
+• Maintains scheduling queues of processes
+– Job queue – set of all processes in the system
+– Ready queue – set of all processes residing in main 
+memory, ready and waiting to execute
+– Device queues – set of processes waiting for an I/O 
+device
+– Processes migrate among the various queues
+8
+Ready Queue And Various I/O Device Queues
+9
+Representation of Process Scheduling
+Queueing diagram represents queues, resources, flows
+Assumes a single CPU. Common until recently
+10
+Schedulers
+• Short-term scheduler  (or CPU scheduler) – selects which process should be 
+executed next and allocates CPU
+– Sometimes the only scheduler in a system
+– Short-term scheduler is invoked frequently (milliseconds)  (must be 
+fast)
+• Long-term scheduler  (or job scheduler) – selects which processes should be 
+brought into the ready queue
+– Long-term scheduler is invoked  infrequently (seconds, minutes)  (may 
+be slow)
+– The long-term scheduler controls the degree of multiprogramming
+• Processes can be described as either:
+– I/O-bound process – spends more time doing I/O than computations, 
+many short CPU bursts
+– CPU-bound process – spends more time doing computations; few very 
+long CPU bursts
+• Long-term scheduler strives for good process mix
+11
+Addition of Medium Term Scheduling
+Medium-term scheduler  can be added if degree of multiple 
+programming needs to decrease
+Remove process from memory, store on disk, bring back in 
+from disk to continue execution: swapping
+12
+Multitasking in Mobile Systems
+• Some mobile systems (e.g., early version of iOS)  allow only 
+one process to run, others suspended
+• Due to screen real estate, user interface limits iOS provides 
+for a 
+– Single foreground process- controlled via user interface
+– Multiple background processes– in memory, running, but not on 
+the display, and with limits
+• Limits include single, short task, receiving notification of events, specific 
+long-running tasks like audio playback
+• Newer iOS supports multitasking better.
+• Android runs foreground and background, with fewer limits
+– Background process uses a service to perform tasks
+– Service can keep running even if background process is 
+suspended
+– Service has no user interface, small memory use.
+13
+14
+Context Switch
+• When CPU switches to another process, the 
+system must save the state of the old process 
+and load the saved state for the new process 
+via a context switch
+• Context of a process represented in the PCB
+• Context-switch time is overhead; the system 
+does no useful work while switching
+– The more complex the OS and the PCB  the longer 
+the context switch
+• Time dependent on hardware support
+– Some hardware provides multiple sets of registers 
+per CPU multiple contexts loaded at once
+15
+Processes creation & termination
+18
+Process Creation
+• Parent process create children processes, 
+which, in turn create other processes, 
+forming a tree of processes
+• Generally, process identified and managed 
+via a process identifier (pid)
+• Resource sharing options
+– Parent and children share all resources
+– Children share subset of parent’s resources
+– Parent and child share no resources*
+• Execution options
+– Parent and children execute concurrently
+– Parent waits until children terminate
+19
+A Tree of Processes in Linux
+init
+pid = 1
+login kthreadd sshd
+pid = 8415 pid = 2 pid = 3028
+bash khelper pdflush sshd
+pid = 8416 pid = 6 pid = 200 pid = 3610
+tcsch
+ps emacs
+pid = 4005
+pid = 9298 pid = 9204
+20
+Process Creation (Cont.)
+• Address space
+– Child duplicate of parent
+– Child has a program loaded into it
+• UNIX examples
+– fork() system call creates new process
+– exec() system call used after a fork() to replace the 
+process’memory space with a new program
+21
+Fork ( ) to create a child process
+• Fork creates a copy of process
+• Return value from fork (): integer
+– When > 0: 
+• Running in (original) Parent process
+• return value is pid of new child
+– When = 0: 
+• Running in new Child process
+– When < 0: 
+• Error! Perhaps exceeds resource constraints. sets errno (a global variable in errno.h)
+• Running in original process
+• All of the state of original process duplicated in 
+both Parent and Child! Almost ..
+– Memory, File Descriptors (next topic), etc…
+22
+Process Management System Calls
+• UNIX fork – system call to create a copy of the current process, 
+and start it running
+– No arguments!
+• UNIX exec – system call to change the program being run by the 
+current process. Several variations.
+• UNIX wait – system call to wait for a process to finish
+• Details: see man pages
+Some examples: 
+pid_t pid = getpid();   /* get current processes PID */;
+waitpid(cid, 0, 0);   /* Wait for my child to terminate. */ 
+exit (0);   /* Quit*/ 
+kill(cid, SIGKILL);   /* Kill child*/
+23
+UNIX Process Management
+child
+parent
+24
+C Program Forking Separate Process
+<sys/types.h>  definitions of derived types
+<unistd.h>   POSIX API
+execlp(3) - Linux man page
+http://linux.die.net/man/3/execlp
+25
+Forking PIDs
+#include <sys/types.h>
+#include <stdio.h> Ys-MacBook-Air:ch3 ymalaiya$ ./newproc-posix_m
+I am the parent with PID 494, my parent is 485, my child is 496
+#include <unistd.h> I am the child 0, my PID is 496
+int main(){ DateClient.java newproc-posix_m
+pid_t cid;
+Child Complete
+/* fork a child process */ Ys-MacBook-Air:ch3 ymalaiya$
+cid = fork();
+if (cid < 0) { /* error occurred */
+fprintf(stderr, "Fork Failed\n");
+return 1;
+}
+else if (cid == 0) { /* child process */
+printf("I am the child %d, my PID is %d\n", cid, getpid());
+execlp("/bin/ls","ls",NULL);
+}
+else { /* parent process */
+/* parent will wait for the child to complete */
+printf("I am the parent with PID %d, my parent is %d, my child is %d\n",getpid(), getppid(), cid);
+wait(NULL);
+printf("Child Complete\n");
+}
+See self-exercise in Piazza https://www.tutorialspoint.com/compile_c_online.phpreturn 0;
+}
+26
+wait/waitpid
+• Wait/waitpid ( ) allows caller to suspend execution 
+until child’s status is available
+• Process status availability
+– Generally after termination
+– Or if process is stopped
+• pid_t waitpid(pid_t pid, int *status, int options);
+• The value of pid can be:
+– 0    wait for any child process with same  process group ID 
+(perhaps inherited)
+– > 0    wait for child whose process group ID is equal to the 
+value of pid
+– -1 wait for any child process  (equi to wait ( ))
+• Status: where status info needs to be saved
+27
+Linux: fork ( )
+• Search for man fork( )
+• http://man7.org/linux/man-pages/man2/fork.2.html
+NAME fork - create a child process
+SYNOPSIS #include <unistd.h>
+pid_t fork(void);
+DESCRIPTION fork() creates a new process by duplicating the calling 
+process.  The  new process is referred to as the child process.  …
+The child process and the parent process run in separate memory  spaces…
+The child process is an exact duplicate of the parent process except  for the 
+following points:  ….
+RETURN VALUE  On success, the PID of the child process is returned in the 
+parent,  and 0 is returned in the child.  On failure, -1 is returned in the
+parent, no child process is created, and errno is set appropriately.
+EXAMPLE See pipe(2) and wait(2).
+…
+errno is a global variable in errno.h
+28
+Introductions P2
+29
+CS370 Operating Systems
+Colorado State University
+Yashwant K Malaiya
+Spring 2020 IC 3a
+30 30
+Process State
+Q1. A process may go from the Running state to the 
+Ready state because
+A. It is finished and is ready to get into the 
+Terminated state.
+B. It is time for another process to run
+C. It needs to wait for an IO
+31 31
+Fork( )
+Q2. Consider the code snippet:   cPID = fork().   The 
+parent has a process-ID of 1425 and the newly created 
+child has a process-ID of 7182. Select the right 
+statement.
+A. The value of cPID in parent is   1425 and in the 
+child cPID value is 0.
+B. The value of cPID in parent is    7182 and in the 
+child cPID value is 0.
+C. The value of cPID in parent is:    1425 and in the 
+child cPID value is 7182.
+D. The value of cPID in parent is:    0 and in the child 
+cPID value is 7182.
+32 32
+Answers
+33
+Process State
+Q1. A process may go from the Running state to the 
+Ready state because
+A. It is finished and is ready to get into the 
+Terminated state.
+B. It is time for another process to run
+C. It needs to wait for an IO
+34 34
+Fork( )
+Q2. Consider the code snippet:   cPID = fork().   The 
+parent has a process-ID of 1425 and the newly created 
+child has a process-ID of 7182. Select the right 
+statement.
+A. The value of cPID in parent is   1425 and in the 
+child cPID value is 0.
+B. The value of cPID in parent is    7182 and in the 
+child cPID value is 0.
+C. The value of cPID in parent is:    1425 and in the 
+child cPID value is 7182.
+D. The value of cPID in parent is:    0 and in the child 
+cPID value is 7182.
+35 35
+CS370 Operating Systems
+Colorado State University
+Yashwant K Malaiya
+Spring 2020 IC 3a Done
+36 36
+Process Group ID
+• Process group is a collection of related 
+processes
+• Each process has a process group ID
+• Process group leader?
+– Process with pid==pgid
+• A process group has an associated controlling 
+terminal, usually the user’s keyboard
+– Control-C: sends interrupt signal (SIGINT) to all 
+processes in the process group
+– Control-Z: sends the suspend signal (SIGSTOP) to 
+all processes in the process group
+Applies to foreground processes: those interacting
+With the terminal
+37
+Process Groups
+A child Inherits parent’s process group ID. Parent or 
+child can change group ID of child by using setpgid. 
+By default, a Process Group comprises:
+• Parent (and further ancestors)
+• Siblings
+• Children (and further descendants)
+A process can only send signals to members of its 
+process group
+• Signals are a limited form of inter-process 
+communication used in Unix. 
+• Signals can be sent using system call
+– int kill(pid_t pid, int sig);
+38
+Process Termination
+• Process executes last statement and then asks 
+the operating system to delete it using the 
+exit() system call.
+– Returns  status data from child to parent (via wait())
+– Process’ resources are deallocated by operating 
+system
+• Parent may terminate the execution of children 
+processes  using the kill( ) system call.  
+Some reasons for doing so:
+– Child has exceeded allocated resources
+– Task assigned to child is no longer required
+– The parent is exiting and the operating systems does 
+not allow  a child to continue if its parent terminates
+kill(child_pid,SIGKILL);
+39
+Process Termination
+• Some operating systems do not allow child to exists if its 
+parent has terminated.  If a process terminates, then all its 
+children must also be terminated.
+– cascading termination.  All children, grandchildren, etc.  are  
+terminated.
+– The termination is initiated by the operating system.
+• The parent process may wait for termination of a child 
+process by using the wait()system call. The call returns 
+status information and the pid of the terminated process
+pid = wait(&status); 
+• If no parent waiting (did not invoke wait()) process is a 
+zombie
+• If parent terminated without invoking wait , process is an 
+orphan (it is still running, reclaimed by init)
+Zombie: a process that has completed execution 
+(via the exit system call) but still has an entry in the 
+process table
+40
+41
+Multi-process Program Ex – Chrome Browser
+• Early web browsers ran as single process
+– If one web site causes trouble, entire browser can hang or 
+crash
+• Google Chrome Browser is multiprocess with 3 
+different types of processes: 
+– Browser process manages user interface, disk and 
+network I/O
+– Renderer process renders web pages, deals with HTML, 
+Javascript. A new renderer created for each website 
+opened
+• Runs in sandbox restricting disk and network I/O, minimizing 
+effect of security exploits
+– Plug-in process for each type of plug-in
+42
+Multitasking
+43
+Cooperating Processes
+• Independent process cannot affect or be 
+affected by the execution of another process
+• Cooperating process can affect or be affected 
+by the execution of another process
+• Advantages of process cooperation
+– Information sharing 
+– Computation speed-up
+– Modularity
+– Convenience
+44
+Interprocess Communication
+• Processes within a system may be independent or 
+cooperating
+• Cooperating process can affect or be affected by other 
+processes, including sharing data
+• Reasons for cooperating processes:
+– Information sharing
+– Computation speedup
+– Modularity
+– Convenience
+• Cooperating processes need interprocess communication 
+(IPC)
+• Two models of IPC
+– Shared memory
+– Message passing
+45
+Communications Models 
+(a) Message passing.  (b) shared memory. 
+46
+Producer-Consumer Problem
+• Common paradigm for cooperating 
+processes, producer process produces 
+information that is consumed by a 
+consumer process
+– unbounded-buffer places no practical limit on 
+the size of the buffer
+– bounded-buffer assumes that there is a fixed 
+buffer size
+49
+Bounded-Buffer – Shared-Memory Solution
+• Shared data
+#define BUFFER_SIZE 10
+typedef struct { • in points to the next free position in the buffer
+. . . • out points to the first full position in the buffer. 
+} item; • Buffer is empty when in == out; 
+• Buffer is full when 
+item buffer[BUFFER_SIZE]; ((in + 1) % BUFFER SIZE) == out.   (Circular buffer)
+int in = 0;
+• This scheme can only use BUFFER_SIZE-1 
+int out = 0;
+elements
+Out In
+0 1 2 3 4 5 6 7
+(2+1)%8 =3  but    (7+1)%8 =0
+50
+Bounded-Buffer – Producer
+item next_produced; 
+while (true) { 
+/* produce an item in next produced */ 
+while (((in + 1) % BUFFER_SIZE) == out) 
+; /* do nothing */ 
+buffer[in] = next_produced; 
+in = (in + 1) % BUFFER_SIZE; 
+} 
+Out In
+0 1 2 3 4 5 6 7
+51
+Bounded Buffer – Consumer
+item next_consumed; 
+while (true) {
+while (in == out) 
+; /* do nothing */
+next_consumed = buffer[out]; 
+out = (out + 1) % BUFFER_SIZE;
+/* consume the item in next consumed */ 
+} 
+Out In
+0 1 2 3 4 5 6 7
+52
+Producer Consumer Mismatch
+53

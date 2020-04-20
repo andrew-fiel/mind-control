@@ -1,0 +1,538 @@
+CS370 Operating Systems
+Colorado State University
+Yashwant K Malaiya
+Spring 2020 L20
+Virtual Memory
+Slides based on 
+• Text by Silberschatz, Galvin, Gagne
+• Various sources
+1 1
+Questions from last time
+• Do all pages have a copy on the disk?
+• Where is virtual memory? Its virtual. Main memory-Secondary memory  interface.
+• Paging algorithms seem to assume both temporal 
+and spatial locality… how true is this?
+• How can we get the reference string that is 
+representative of actual operation? Our reference strings are chosen for 
+illustration purposes.
+• Optimal Page Replacement: Why can’t future page 
+numbers be predicted?
+– Bringing in a page of information, we are already exploiting spatial locality.
+– LRU assumes some temporal locality.
+• Can the stock market be predicted? Jim Simons: 30 years, 66%/y 
+2
+FAQ
+• Can more than one page loaded into memory when a 
+process starts? prefetching 
+• Why LRU and OPT not affected by Belady’s
+anomaly? Stack type. When frames are less they are a subset of pages when frame are more.
+• Effective Access Time (EAT)
+= (1 – p) x memory access time
++ p (page-fault service time )
+3
+Least Recently Used (LRU) Algorithm
+• Use past knowledge rather than future
+• Replace page that has not been used in the most amount 
+of time  (4th access – page 7 is least recently used …_)
+• Associate time of last use with each page Track carefully!
+• 12 faults – better than FIFO (15) but worse than OPT (9)
+• Generally good algorithm and frequently used
+• But how to implement it by tracking the page usage? 
+4
+LRU Algorithm: Implementations
+Possible implementations
+• Counter implementation
+– Every page entry has a counter; every time page is 
+referenced through this entry, copy the clock into the 
+counter
+– When a page needs to be changed, look at the counters 
+to find smallest value
+• Search through table needed
+• Stack implementation
+– Keep a stack of page numbers in a double link form:
+– Page referenced:
+• move it to the top
+• requires 6 pointers to be changed
+– Each update expensive
+– No search for replacement needed (bottom is least recently used)
+LRU and OPT are cases of stack algorithms that don’t have Belady’s Anomaly
+5
+Use Of A Stack to Record Most Recent Page References
+reference string
+4 7 0 7 1 0 1 2 1 2 7 1 2
+Most recently used -> 2 7
+a b
+1 2
+0 1
+7 0 This shows tracking stack,
+Least recently used -> not actual frames.4 4
+stack stack
+before after
+a b
+Too slow if done in software
+6
+Use Of A Stack to Record Most Recent Page References
+4 7 0 7 1 0 1 2 1 2 7 1 2
+Most recently used -> 4 7 0 7 1 0 1 2 1 2 7 1 2
+4 7 0 7 1 0 1 2 1 2 7 1
+4 4 0 7 7 0 0 0 1 2 7
+4 4 4 7 7 7 0 0 0
+Least recently used -> 4 4 4 4 4 4
+Detailed version of previous slide.
+This shows tracking stack, not actual frames.
+7
+Use Of A Stack to Record Most Recent Page References
+Earlier problem (upper) revisited. 
+This shows tracking stack, not actual frames.
+7 0 1 2 0 3 0 4 2 3 0 3 2 1 2 0 1 7 0 1
+MRU-> 7 0 1 2 0 3 0 4 2 3 0 3
+7 0 1 2 0 3 0 4 2 3 0
+LRU-> 7 0 1 2 2 3 0 4 2 2
+8
+LRU Approximation Algorithms
+• LRU needs special hardware and still slow
+• Reference bit
+– With each page associate a bit, initially = 0
+– When the page is referenced, bit set to 1 
+– Replace any page with reference bit = 0 (if one 
+exists)
+• 0 implies not used since initialization
+• We do not know the order, however.
+– pick a non-dirty page first
+– Periodically clear the reference bit.
+• Advanced schemes using more bits: preserve more 
+information about the order
+9
+Ref bit + history shift register
+LRU approximation
+Ref bit: 1 indicates used, Shift register records history
+Ex: 3-period history
+Ref Bit Shift Register Shift Register after OS timer interrupt
+1 0000 0000 1000 0000
+1 1001 0001 1100 1000
+0 0110 0011 0011 0001
+• Interpret 8-bit bytes as unsigned integers 
+• Page with the lowest number is the LRU page: replace. 
+Examples: 
+• 00000000 : Not used in last 8 periods 
+• 01100101 : Used 4 times in the last 8 periods 
+• 11000100 used more recently than 01110111
+10
+Second-chance (clock) algorithm
+• Second-chance algorithm (“clock algo”)
+i. Round robin selection of victim page and
+ii. recently used page gets second chance.
+– Clock replacement  (using circular queue): hand as a 
+pointer
+– Page referenced: reference bit = 1 
+– Page replacement: Consider next page
+• Reference bit = 0 -> replace it   
+• reference bit = 1 then: give it another chance
+– set reference bit 0, leave page in memory 
+– consider next page, subject to same rules
+11
+Second-Chance (clock) Page-Replacement Algorithm
+reference pages reference pages
+bits bits • Clock replacement: hand 
+0 0 as a pointer
+• Consider next page
+0 0 – Reference bit = 0 -> 
+next replace it   1 0
+victim – reference bit = 1 then:
+1 0 • set reference bit 0, leave 
+page in memory 
+0 0 • consider next page, 
+subject to same rules
+(a) Change to 0, give it 
+1 1
+another chance
+1 1 (b) Already 0. Replace page
+circular queue of pages circular queue of pages
+(a) (b)
+12
+…
+…
+…
+…
+Enhanced Second-Chance Algorithm
+Improve algorithm by using reference bit and modify bit (if 
+available) in concert  clean page: better replacement candidate
+Take ordered pair (reference, modify)
+1. (0, 0) neither recently used not modified – best page to 
+replace
+2. (0, 1) not recently used but modified – not quite as good, 
+must write out before replacement
+3. (1, 0) recently used but clean – probably will be used again 
+soon
+4. (1, 1) recently used and modified – probably will be used 
+again soon and need to write out before replacement
+When page replacement called for, use the clock scheme  
+but use the four classes replace page in lowest non-empty 
+class
+– Might need to search circular queue several times
+13
+Clever Techniques for enhancing Perf
+• Keep a buffer (pool) of free frames, always
+– Then frame available when needed, not found at fault 
+time
+– Read page into free frame and select victim to evict 
+and add to free pool
+– When convenient, evict victim
+• Keep list of modified pages
+– When backing store is otherwise idle, write pages there 
+and set to non-dirty   (being proactive!)
+• Keep free frame previous contents intact and 
+note what is in them  
+– If referenced again before reused, no need to load 
+contents again from disk
+– Generally useful to reduce penalty if wrong victim 
+frame selected  
+14
+Buffering and applications 
+• Some applications (like databases) often 
+understand their memory/disk usage better 
+than the OS
+– Provide their own buffering schemes 
+– If both the OS and the application were to buffer 
+• Twice the I/O is being utilized for a given I/O 
+– OS may provide “raw access” disk to special 
+programs  without file sytem services.
+15
+Allocation of Frames
+16
+Allocation of Frames
+How to allocate frames to processes?
+– Each process needs minimum number of frames
+Depending on specific needs of the process
+– Maximum of course is total frames in the system
+• Two major allocation schemes
+– fixed allocation
+– priority allocation
+• Many variations
+17
+Fixed Allocation
+• Equal allocation – For example, if there are 100 frames 
+(after allocating frames for the OS) and 5 processes, give 
+each process 20 frames
+– Keep some as free frame buffer pool
+• Proportional allocation – Allocate according to the size of 
+process (need based)
+– Dynamic as degree of multiprogramming, process sizes change
+𝑠 Example:!= size of process 𝑝! Processes P1,P2 m = 62
+𝑆 = ∑𝑠! s1 =10
+𝑚 = total number of frames s2 =127
+𝑠 "#
+𝑎 ! 𝑎 = ×62 ≈ 4! = 𝑎𝑙𝑙𝑜𝑐𝑎𝑡𝑖𝑜𝑛 𝑓𝑜𝑟 𝑝! = ×𝑚 "𝑆 "$%
+𝑎 ="&%& ×62 ≈ 57"$%
+18
+Priority Allocation
+• Use a proportional allocation scheme using 
+priorities rather than size
+• If process Pi generates a page fault,
+– select for replacement one of its frames  or
+– select for replacement a frame from a process 
+with lower priority number
+19
+Global vs. Local Allocation
+• Global replacement – process selects a 
+replacement frame from the set of all frames; 
+one process can take a frame from another
+– But then process execution time can vary greatly
+– But greater throughput, so more common
+• Local replacement – each process selects from 
+only its own set of allocated frames
+– More consistent per-process performance
+– But possibly underutilized memory
+20
+Problem: Thrashing
+• If a process does not have “enough” pages, the 
+page-fault rate is very high
+– Page fault to get page
+– Replace existing frame
+– But quickly need replaced frame back
+– This leads to:
+• Low CPU utilization, leading to
+• Operating system thinking that it needs to increase the 
+degree of multiprogramming leading to
+• Another process added to the system
+• Thrashing º a process is busy swapping pages in 
+and out
+21
+Thrashing (Cont.)
+22
+Demand Paging and Thrashing 
+• Why does demand paging work?
+Locality model
+– Process migrates from one locality to another
+– Localities may overlap
+• Why does thrashing occur in a process?
+size of locality  >  total memory size allocated 
+– Limit effects by using local or priority page replacement
+23
+Locality In A Memory-Reference Pattern
+34
+32
+30
+28
+26
+24
+22
+20
+18
+execution time
+24
+page numbers memory address
+Working-Set Model
+• D º working-set window º a fixed number of page references 
+Example: Δ = 10 page references
+• WSSi (working set of Process Pi) =  
+total number of pages referenced in the most recent D (varies in time)
+– if D too small, working set will not encompass entire locality
+– if D too large, working set will encompass several localities
+– ws is an approximation of locality
+• D = SWSSi º total demand for frames  for all processes
+– if D > mÞ Thrashing
+– Policy if D > m, then suspend or swap out one of the processes 
+25
+Page-Fault Frequency Approach
+• More direct approach than WSS
+• Establish “acceptable” page-fault frequency 
+(PFF) rate and use local replacement policy
+– If actual rate too low, process loses frame
+– If actual rate too high, process gains frame
+increase number
+of frames
+upper bound
+lower bound
+decrease number
+of frames
+number of frames
+26
+page-fault rate
+Working Sets and Page Fault Rates
+• Direct relationship between working set of a process and its page-
+fault rate
+• Working set changes over time
+• Peaks and valleys over time
+Peaks occur at locality changes: 3 working sets
+27
+Memory-Mapped Files
+• Memory-mapped file I/O allows file I/O to be treated as routine 
+memory access by mapping a disk block to a page in memory
+• File is then in memory instead of disk
+• A file is initially read using demand paging
+– A page-sized portion of the file is read from the file system into a 
+physical page
+– Subsequent reads/writes to/from the file are treated as ordinary 
+memory accesses
+• Simplifies and speeds file access by driving file I/O through 
+memory rather than read() and write() system calls
+• Also allows several processes to map the same file allowing the 
+pages in memory to be shared
+• But when does written data make it to disk?
+– Periodically and / or at file close() time
+– For example, when the pager scans for dirty pages
+28
+Memory Mapped Files
+1
+2
+3
+1 4
+2 3 5
+3 6
+4
+5 6
+6
+1
+process A 5 process B
+virtual memory virtual memory
+4
+2
+physical memory
+1 2 3 4 5 6
+disk file Disk File uses 6 blocks
+Page tables used for mapping
+29
+Allocating Kernel Memory
+• Treated differently from user memory
+• Often allocated from a free-memory pool
+– Kernel requests memory for structures of varying sizes
+• Process descriptors, semaphores, file objects etc.
+• Often much smaller than page size
+– Some kernel memory needs to be contiguous
+• e.g. for device I/O
+– approaches (skipped)
+31
+Other Considerations -- Prepaging
+• Prepaging
+– To reduce the large number of page faults that 
+occurs at process startup
+– Prepage all or some of the pages a process will 
+need, before they are referenced
+– But if prepaged pages are unused, I/O and memory 
+was wasted
+– Assume s pages are prepaged and fraction α of the 
+pages is used
+• Is cost of s * α saved pages faults > or < than the cost of 
+prepaging s * (1- α) unnecessary pages?  
+• α near zero Þ greater prepaging loses
+32
+Other Issues – Page Size
+• Sometimes OS designers have a choice
+– Especially if running on custom-built CPU
+• Page size selection must take into consideration:
+– Fragmentation
+– Page table size 
+– I/O overhead
+– Number of page faults
+– Locality
+– TLB size and effectiveness
+• Always power of 2, usually in the range 212 (4,096 
+bytes) to 222 (4,194,304 bytes)
+• On average, growing over time
+33
+Page size issues – TLB Reach 
+• TLB Reach - The amount of memory accessible 
+from the TLB
+• TLB Reach = (TLB Size) X (Page Size)
+• Ideally, the working set of each process is stored 
+in the TLB
+– Otherwise there is a high degree of page faults
+34
+Other Issues – Program Structure
+• Program structure
+– int[128,128] data;  i: row, j: column
+– Each row is stored in one page 
+– Program 1 
+for (j = 0; j <128; j++)
+for (i = 0; i < 128; i++) multiple pages
+data[i,j] = 0;
+128 x 128 = 16,384 page faults 
+– Program 2   inner loop = 1 row = 1 page
+for (i = 0; i < 128; i++)
+for (j = 0; j < 128; j++)same page
+data[i,j] = 0;
+128 page faults
+35
+Other Issues – I/O interlock
+• I/O Interlock – Pages must 
+sometimes be locked into 
+memory
+• Consider I/O - Pages that 
+are used for copying a file 
+from a device must be 
+locked from being selected 
+for eviction by a page 
+replacement algorithm
+• Pinning of pages to lock 
+into memory
+36
+MS Windows
+• Uses demand paging with clustering. Clustering brings 
+in pages surrounding the faulting page
+• Processes are assigned working set minimum and 
+working set maximum
+• Working set minimum is the minimum number of 
+pages the process is guaranteed to have in memory
+• A process may be assigned as many pages up to its 
+working set maximum
+• When the amount of free memory in the system falls 
+below a threshold, automatic working set trimming is 
+performed to restore the amount of free memory
+• Working set trimming removes pages from processes 
+that have pages in excess of their working set 
+minimum
+37
+CS370 Operating Systems
+Colorado State University
+Yashwant K Malaiya
+Spring 2020
+File-system
+Slides based on 
+• Text by Silberschatz, Galvin, Gagne
+• Various sources
+38 38
+File-Systems
+Ch 13: File system interface
+Ch 14: File system implementation
+Ch 15: File system internals
+Ch 11: Mass storage
+39
+File Systems
+40
+Outline
+• File Concept, types
+• Attributes, Access Methods, operations, 
+Protection
+• Directory Structure, namespace, File-System 
+Mounting, File Sharing
+• Next in File System Implementation
+– Storage abstraction: File system metadata (size, 
+freelists), File metadata(attributes, disk block maps), 
+datablocks
+– Allocation of blocks to files: contiguous, sequential, 
+linked list allocation,  indexed
+– In memory info: Mount table, directory structure 
+cache, open file table, buffers
+– Unix: inodes numbers for directories and files
+41
+File types
+Type used by programs not OS
+42
+File Attributes
+• Name – only information kept in human-readable 
+form
+• Identifier – unique tag (number) identifies file 
+within file system
+• Type – needed for systems that support different 
+types
+• Location – pointer to file location on device
+• Size – current file size
+• Protection – controls who can do reading, writing, 
+executing
+• Time, date, and user identification – data for 
+protection, security, and usage monitoring
+• Information about files are kept in the directory 
+structure, which is maintained on the disk
+• Many variations, including extended file attributes 
+such as file checksum
+43
+Disk Structure
+• Disk can be subdivided into partitions
+• Disks or partitions can be RAID protected against 
+failure
+• Partition can be formatted with a file system
+• Entity containing file system known as a volume
+• Each volume containing file system also tracks that 
+file system’s info in device directory or volume 
+table of contents
+• As well as general-purpose file systems there are 
+many special-purpose file systems, frequently all 
+within the same operating system or computer
+44
+Directory Structure
+• A collection of nodes containing information about all files
+Directory
+Files
+F 1 F 2 F 4F 3
+F n
+Both the directory structure and the files reside on disk
+45
+Operations Performed on Directory
+• Traverse the file system
+• List a directory
+• Search for a file
+• Create/Delete/Rename a file
+46
+Directory Organization
+The directory is organized logically  to obtain 
+• Efficiency – locating a file quickly
+• Naming – convenient to users
+– Two users can have same name for different 
+files
+– The same file can have several different 
+names
+• Grouping – logical grouping of files by 
+properties, (e.g., all Java programs, all 
+games, …)
+47

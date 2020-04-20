@@ -1,0 +1,460 @@
+CS370 Operating Systems
+Colorado State University
+Yashwant K Malaiya
+Spring 20 Lecture 4 
+OS Structures/Processes
+Slides based on 
+• Text by Silberschatz, Galvin, Gagne
+• Various sources
+1 1
+Intel Core i7
+FAQ
+• A chip can have one or more processors (CPU, core) and possibly more 
+components.
+• Kernel vs OS:  Kernel: process/memory/file/IO management, OS can 
+include UI, libraries etc. 
+• Why User vs kernel mode? Because users can’t be trusted.  
+• Where are registers, Cache and main memory , physically?
+Note: TA office hours on the web available
+2
+Chap2:  Operating-System Structures
+Objectives:
+• Services OS provides to users, processes, and other 
+systems
+• Structuring an operating system
+• How operating systems are designed and 
+customized and how they boot
+3 3
+OS  Services for the User 1/3
+• Operating systems provide an environment for execution of 
+programs and services to programs and users
+– User interface - Almost all operating systems have a user 
+interface (UI).
+• Varies between Command-Line (CLI), Graphics User 
+Interface (GUI), Batch
+– Program execution - The system must be able to load a 
+program into memory and to run that program, end execution, 
+either normally or abnormally (indicating error)
+– I/O operations - A running program may require I/O, which 
+may involve a file or an I/O device
+4
+OS services for the User 2/3 (Cont.)
+– File-system operations - read and write files and directories, 
+create and delete them, search them, list file Information, 
+permission management.
+– Communications – Processes may exchange information, on the 
+same computer or between computers over a network
+• via shared memory or through message passing (packets 
+moved by the OS)
+– Error detection – OS needs to be constantly aware of possible 
+errors
+• May occur in the CPU and memory hardware, in I/O devices, in 
+user program
+• For each type of error, OS should take the appropriate action to 
+ensure correct and consistent computing
+5
+OS services for system 3/3 (Cont.)
+• OS functions for ensuring the efficient resource sharing
+– Resource allocation - When  multiple users or multiple jobs 
+running concurrently, resources must be allocated to each of 
+them
+• Many types of resources - CPU cycles, main memory, file 
+storage, I/O devices.
+– Accounting - To keep track of which users use how much and 
+what kinds of computer resources
+– Protection and security - concurrent processes should not 
+interfere with each other
+• Protection involves ensuring that all access to system 
+resources is controlled
+• Security of the system from outsiders requires user 
+authentication, extends to defending external I/O devices 
+from invalid access attempts
+6
+A View of Operating System Services
+7
+User Operating System Interface - CLI
+CLI or command interpreter allows direct command 
+entry
+– Sometimes implemented in kernel, sometimes by systems 
+program
+– Sometimes multiple flavors implemented – shells
+– Primarily fetches a command from user and executes it
+– Sometimes commands built-in, sometimes just names of 
+programs
+• If the latter, adding new features doesn’t require shell modification
+Ex:
+Windows:  command prompt
+Linux:   bash
+8
+Shell Command Interpreter
+A bash session
+9
+Common bash commands 1/2
+pwd print Working directory
+ls -l Files in the working dir –long format
+cd  dirpath Change to dirpath dir
+.     ..      ~username       / This dir , upper, usename’s home, root
+cp f1  d1 Copy f1 to dir d1
+mv f1 d1 Move f1 to d1
+rm f1 f2 Remove f1, f2
+mkdir d1 Create directory d1
+which x1 Path for executable file x1
+man cm    help cm Manual entry or help with command cm
+ls > f.txt Redirect command std output to f.txt,  >> to append
+sort < list.txt Std input from file
+ls –l | less Pipe first command into second
+10
+Common bash commands  2/2
+echo $((expression)) Evaluate expression
+echo $PATH Show PATH
+echo $SHELL Show default shell
+chmod 755 dir Change dir permissions to 755
+jobs       ps List jobs for current shell,    processes in the system
+kill id Kill job or process with given id
+cmd & Start job in background
+fg id Bring job id to foreground
+ctrl-z  followed by bg or fg Suspend job and put it in background
+w       who Who is logged on
+ping ipadd Get a ping from ipadd
+ssh user@host Connect to host as user
+grep pattern files Search for pattern in files
+Ctrl-c Halt current command
+11
+User Operating System Interface - GUI
+• User-friendly desktop metaphor interface
+– Usually mouse, keyboard, and monitor
+– Icons represent files, programs, actions, etc
+– Various mouse buttons over objects in the interface cause 
+various actions (provide information, options, execute 
+function, open directory (known as a folder)
+– Invented at Xerox PARC in 1973
+• Most systems now include both CLI and GUI interfaces
+– Microsoft Windows is GUI with CLI “command” shell
+– Apple Mac OS X is “Aqua” GUI interface with UNIX kernel 
+underneath and shells available
+– Unix and Linux have CLI with optional GUI interfaces (CDE, 
+KDE, GNOME)
+12
+Touchscreen Interfaces
+• Touchscreen devices 
+require new interfaces
+• Mouse not possible or not desired
+• Actions and selection based on 
+gestures
+• Virtual keyboard for text entry
+• Voice commands.
+13
+The Mac OS X GUI
+14
+System Calls
+• Programming interface to the services provided by the OS
+• Typically written in a high-level language (C or C++)
+• Mostly accessed by programs via a high-level Application 
+Programming Interface (API) rather than direct system call 
+use
+• Three most common APIs are Win32 API for Windows, 
+POSIX API for POSIX-based systems (including virtually all 
+versions of UNIX, Linux, and Mac OS X), and Java API for 
+the Java virtual machine (JVM)
+Note that the system-call names used throughout our 
+text are generic
+15
+Example of System Calls
+• System call sequence to copy the contents of one file 
+to another file
+16
+Example of Standard API
+unistd.h header file provides 
+access to the POSIX API
+17
+System Call Implementation
+• The caller need know nothing about how the 
+system call is implemented
+– Just needs to obey API and understand what OS will do 
+as a result call
+– Most details of  OS interface hidden from programmer 
+by API  
+• Managed by run-time support library (set of functions built 
+into libraries included with compiler)
+• System call implementation examples: In LC3 
+Traps are 
+– LC-3 Trap x21 (OUT)  code in Patt & Patel system 
+– Identified by a number that leads to address of the calls
+routine
+– Arguments provided in designated registers
+– Linux x86_64 table
+18
+API – System Call – OS Relationship
+Trap 
+vector 
+table in 
+LC3
+19
+Examples of Windows and  Unix System Calls
+20
+Standard C Library Example
+• C program invoking printf() library call, which 
+calls write() system call
+21
+Example OS: MS-DOS ’81..
+• Single-tasking
+• Shell invoked when 
+system booted
+• Simple method to run 
+program
+– No process created
+• Single memory space
+• Loads program into 
+memory, overwriting 
+all but the kernel
+• Program exit -> shell 
+reloaded
+At system startup          running a program
+22
+Example: xBSD ‘93 Berkely
+• Unix ‘73 variant, inherited by 
+several later OSs
+• Multitasking
+• User login -> invoke user’s choice 
+of shell
+• Shell executes fork() system call to 
+create process
+– Executes exec() to load program into 
+process
+– Shell waits for process to terminate 
+or continues with user commands
+• Process exits with:
+– code = 0 – no error 
+– code > 0 – error code
+23
+POSIX
+• POSIX: Portable Operating Systems Interface 
+for UNIX     Pronounced pahz-icks
+• POSIX.1 published in 1988
+• Final POSIX standard: Joint document 
+– Approved by IEEE & Open Group End of 2001 
+– ISO/IEC approved it in November 2002 
+– Most recent IEEE Std 1003.1-2008, 2016 Edition
+• Most OSs are mostly POSIX-compliant
+24
+FAQ
+• API vs system call User programs in a high level language use APIs, APIs are 
+wrappers for system calls that call system routines. Example  Linux x-86 system call code.
+• Why do we need API (application programing 
+interface)? So that we don’t have to write the code in assembly. Example
+• Who came up with API standard POSIX? Committees of experts. 
+More
+25
+System Programs 1/4
+• System programs provide a convenient environment 
+for program development and execution.  They can be 
+divided into:
+– File manipulation 
+– Status information sometimes stored in a File modification
+– Programming language support
+– Program loading and execution
+– Communications
+– Background services
+– Application programs
+• Most users’ view of the operation system is defined 
+by system programs, not the actual system calls
+26
+System Programs  2/4
+• Provide a convenient environment for program 
+development and execution
+– Some of them are simply user interfaces to system calls; 
+others are considerably more complex
+• File management - Create, delete, copy, rename, 
+print, dump, list, and generally manipulate files 
+and directories
+• Status information
+– Some ask the system for info - date, time, amount of 
+available memory, disk space, number of users
+– Others provide detailed performance, logging, and 
+debugging information
+– Typically, these programs format and print the output to 
+the terminal or other output devices
+– Some systems implement  a registry - used to store and 
+retrieve configuration information
+27
+System Programs 3/4
+• File modification
+– Text editors to create and modify files
+– Special commands to search contents of files or perform 
+transformations of the text
+• Programming-language support - Compilers, 
+assemblers, debuggers and interpreters sometimes 
+provided
+• Program loading and execution- Absolute loaders, 
+relocatable loaders, linkage editors, and overlay-
+loaders, debugging systems for higher-level and 
+machine language
+• Communications - Provide the mechanism for 
+creating virtual connections among processes, users, 
+and computer systems
+– Allow users to send messages to one another’s screens, 
+browse web pages, send electronic-mail messages, log in 
+remotely, transfer files from one machine to another
+28
+System Programs 4/4
+• Background Services
+– Launch at boot time
+• Some for system startup, then terminate
+• Some from system boot to shutdown
+– Provide facilities like disk checking, process 
+scheduling, error logging, printing
+– Run in user context not kernel context
+– Known as services, subsystems, daemons
+• Application programs
+– Don’t pertain to system
+– Run by users
+– Not typically considered part of OS
+– Launched by command line, mouse click, finger poke
+29
+Operating System Structure
+• General-purpose OS is very large program
+• Various ways to structure ones
+– Simple structure – MS-DOS.  not modular
+– More complex – UNIX. 
+• Kernel+systems programs
+– Layered – an abstraction
+– Microkernel –Mach: kernel is minimal
+– hybrid
+Tanenbaum–Torvalds debate:
+(January 29, 1992). 
+"LINUX is obsolete". 
+30
+CS370 OS    Ch3   Processes 
+• Process Concept: a program in execution
+• Process Scheduling
+• Processes creation and termination
+• Interprocess Communication using shared 
+memory and message passing
+31 31
+Process Concept
+• An operating system executes a variety of programs:
+– Batch system – jobs
+– Time-shared systems – user programs or tasks
+• Textbook uses the terms job and process almost 
+interchangeably
+• Process – a program in execution; process execution 
+must progress in sequential fashion. Includes
+– The program code, also called “text section”
+– Current activity including program counter, processor 
+registers
+– Stack containing temporary data
+• Function parameters, return addresses, local variables
+– Data section containing global variables
+– Heap containing memory dynamically allocated during run 
+time
+32
+Process Concept (Cont.)
+• Program is passive entity stored on disk 
+(executable file), process is active 
+– Program becomes process when executable file 
+loaded into memory
+• Execution of program started via GUI mouse 
+clicks, command line entry of its name, etc
+• One program can be several processes
+– Consider multiple users executing the same 
+program
+33
+Process in Memory
+34
+Process State
+• As a process executes, it changes state
+– new:  The process is being created
+– running:  Instructions are being executed
+– waiting:  The process is waiting for some event to 
+occur
+– ready:  The process is waiting to be assigned to a 
+processor
+– terminated:  The process has finished execution
+36
+Diagram of Process State
+In the Ready 
+Queue
+Transitions:
+Ready to Running: scheduled by scheduler
+Running to Ready: scheduler picks another process, back in ready queue
+Running to Waiting (Blocked) : process blocks for input/output
+Waiting to Ready: I/O or event done
+37
+Process Control Block (PCB)
+Information associated with each process 
+(also called task control block)
+• Process state – running, waiting, etc
+• Program counter – location of 
+instruction to next execute
+• CPU registers – contents of all process-
+centric registers
+• CPU scheduling information- priorities, 
+scheduling queue pointers
+• Memory-management information –
+memory allocated to the process
+• Accounting information – CPU used, 
+clock time elapsed since start, time 
+limits
+• I/O status information – I/O devices 
+allocated to process, list of open files
+38
+CPU Switch From Process to Process
+39
+Threads
+• So far, process has a single thread of execution
+• Consider having multiple program counters per process
+– Multiple locations can execute at once
+• Multiple threads of control -> threads
+• Must then have storage for thread details, multiple 
+program counters in PCB
+• Coming up in next chapter
+40
+Process Representation in Linux
+Represented by the C structure task_struct. 
+Fields may include
+pid t_pid; /* process identifier */ 
+long state; /* state of the process */ 
+unsigned int time_slice /* scheduling information */ 
+struct task_struct *parent; /* this process’s parent */ 
+struct list_head children; /* this process’s children */ 
+struct files_struct *files; /* list of open files */ 
+struct mm_struct *mm; /* address space of this process */
+Unlike an array, the elements of a struct can be of different data types
+41
+Process Scheduling
+• Maximize CPU use, quickly switch processes 
+onto CPU for time sharing
+• Process scheduler selects among available 
+processes for next execution on CPU
+• Maintains scheduling queues of processes
+– Job queue – set of all processes in the system
+– Ready queue – set of all processes residing in main 
+memory, ready and waiting to execute
+– Device queues – set of processes waiting for an I/O 
+device
+– Processes migrate among the various queues
+42
+Ready Queue And Various I/O Device Queues
+43
+Representation of Process Scheduling
+ Queueing diagram represents queues, resources, flows
+Assumes a single CPU. Common until recently
+44
+Schedulers
+• Short-term scheduler  (or CPU scheduler) – selects which process should be 
+executed next and allocates CPU
+– Sometimes the only scheduler in a system
+– Short-term scheduler is invoked frequently (milliseconds)  (must be 
+fast)
+• Long-term scheduler  (or job scheduler) – selects which processes should be 
+brought into the ready queue
+– Long-term scheduler is invoked  infrequently (seconds, minutes)  (may 
+be slow)
+– The long-term scheduler controls the degree of multiprogramming
+• Processes can be described as either:
+– I/O-bound process – spends more time doing I/O than computations, 
+many short CPU bursts
+– CPU-bound process – spends more time doing computations; few very 
+long CPU bursts
+• Long-term scheduler strives for good process mix
+45

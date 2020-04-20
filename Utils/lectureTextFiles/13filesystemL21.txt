@@ -1,0 +1,526 @@
+CS370 Operating Systems
+Colorado State University
+Yashwant K Malaiya
+Spring 2020 L21
+File-system Interface
+Slides based on 
+• Text by Silberschatz, Galvin, Gagne
+• Various sources
+1 1
+Where we are
+Done
+• Virtual vs Physical address space
+• Paging
+• Page replacement algorithms
+• Frame allocation
+Next
+• Files/directories
+• File system: structure, management
+2
+FAQ
+• Can the page table be accessed by the user 
+programs? Kernel space
+• What is /where is virtual memory?
+• Working set can mean
+– Pages accessed in a specified time window tools available
+– Pages currently allocated to a process
+• Reference bit: set to one if frame accessed. 
+Minimal info needed for LRU
+• What page replacement algorithms are 
+currently in use variations of LRU/Clock
+• Second chance/Clock: combination of LRU approx. and sequential 
+search
+3
+CS370 Operating Systems
+Colorado State University
+Yashwant K Malaiya
+Spring 2020
+File System
+Slides based on 
+• Text by Silberschatz, Galvin, Gagne
+• Various sources
+4 4
+Outline
+• File Concept, types
+• Attributes, Access Methods, operations, 
+Protection
+• Directory Structure, namespace, File-System 
+Mounting, File Sharing
+• Next in File System Implementation
+– Storage abstraction: File system metadata (size, 
+freelists), File metadata(attributes, disk block maps), 
+datablocks
+– Allocation of blocks to files: contiguous, sequential, 
+linked list allocation,  indexed
+– In memory info: Mount table, directory structure 
+cache, open file table, buffers
+– Unix: inodes numbers for directories and files
+5
+File Attributes
+• Name – only information kept in human-readable 
+form
+• Identifier– unique tag (number) identifies file 
+within file system
+• Type – needed for systems that support different 
+types
+• Location – pointer to file location on device
+• Size – current file size
+• Protection – controls who can do reading, writing, 
+executing
+• Time, date, and user identification – data for 
+protection, security, and usage monitoring
+• Information about files are kept in the directory 
+structure, which is maintained on the disk
+• Many variations, including extended file attributes 
+such as file checksum
+6
+Disk Structure
+• Disk can be subdivided into partitions
+• Disks or partitions can be RAID protected against 
+failure
+• Partition can be formatted with a file system
+• Entity containing file system known as a volume
+• Each volume containing file system also tracks that 
+file system’s info in device directory or volume 
+table of contents
+• As well as general-purpose file systems there are 
+many special-purpose file systems, frequently all 
+within the same operating system or computer
+7
+Directory Structure
+• A collection of nodes containing information about all files
+Directory
+Files
+F 1 F 2 F 4
+F 3
+F n
+Both the directory structure and the files reside on disk
+8
+Operations Performed on Directory
+• Traverse the file system
+• List a directory
+• Search for a file
+• Create/Delete/Rename a file
+9
+Directory Organization
+The directory is organized logically  to obtain 
+• Efficiency – locating a file quickly
+• Naming – convenient to users
+– Two users can have same name for different 
+files
+– The same file can have several different 
+names
+• Grouping – logical grouping of files by 
+properties, (e.g., all Java programs, all 
+games, …)
+10
+Directory Organization
+• Single level directory 
+• Two-level directory 
+• Tree-structured directories: 
+– efficient grouping, searching,  
+– absolute or relative path names
+• Acyclic graph directories 
+– Shared sub-directory, files 
+11
+File System Mounting
+• A file system must be mounted before it can be 
+accessed
+• A unmounted file system is mounted at a mount point
+• Merges the file system
+root
+12
+File Sharing
+• Sharing of files on multi-user systems is desirable
+• Sharing may be done through a protection scheme
+• On distributed systems, files may be shared across a 
+network
+• Network File System (NFS) is a common distributed 
+file-sharing method
+• If multi-user system
+– User IDs identify users, allowing permissions and 
+protections to be per-user
+Group IDs allow users to be in groups, permitting group 
+access rights
+– Owner of a file / directory
+– Group of a file / directory
+13
+Protection: Access Lists and Groups
+• Mode of access:  read, write, execute
+• Three classes of users on Unix / Linux
+RWX
+a) owner access 7  1 1 1
+RWX
+b) group access 6  1 1 0
+RWX
+c) public access 1  0 0 1
+• Ask manager to create a group (unique name), say 
+G, and add some users to the group.
+• For a particular file (say game) or subdirectory, 
+define an appropriate access.
+Attach a group to a file
+chgrp     G    game
+14
+Windows 7 Access-Control List Management
+15
+A Sample UNIX Directory Listing
+16
+CS370 Operating Systems
+Colorado State University
+Yashwant K Malaiya
+File-system 
+Implementation
+Slides based on 
+• Text by Silberschatz, Galvin, Gagne
+• Various sources
+17 17
+Chap 14: File System Implementation
+• File-System Structure
+• File-System Implementation 
+• Directory Implementation
+• Allocation Methods
+• Free-Space Management 
+• Efficiency and Performance
+• Recovery
+18
+File-System Structure
+• File structure
+– Logical storage unit
+– Collection of related information
+• File system resides on secondary storage (disks/SSD)
+– Provides user interface to storage, mapping logical to physical
+– Provides efficient and convenient access to disk by allowing data 
+to be stored, located retrieved easily
+– Can be on other media (flash etc), with different file system
+• Disk provides in-place rewrite and random access
+– I/O transfers performed in blocks of sectors (usually 512 bytes)
+• File control block – storage structure -information  about 
+a file (“inode” in Linux) inc location of data
+• Device driver controls the physical device 
+19
+Layered File System
+Files, metadata
+File
+Logical blocks to 
+system
+physical blocks
+Linear array of 
+blocks
+Device drivers
+20
+Layered File System
+Processes
+fd = open (afilename, ..)
+read (fd, buf, size);
+Logical File Search dir, find file location, 
+write (fd, buf, size);
+determine which file blocks close (fd)System Layer
+will be used
+Map file blocks (logical Logical block numbers(s);
+File
+blocks) to disk blocks file_start block on disk
+Organization
+(physical blocks), disk 
+Layer
+allocation
+“Basic File Commands to device driver, Physical block numbers
+System” Layer Buffering of disk data, 
+caching of disk blocks 
+In cache? If not, get block
+Disk Driver
+Cylinder, track, sector, R/W
+Disk Controller
+21
+File System Layers (from bottom)
+• Device drivers manage I/O devices at the I/O control 
+layer
+– Given commands like “read drive1, cylinder 72, track 2, sector 
+10, into memory location 1060” outputs low-level hardware 
+specific commands to hardware controller
+• “Basic file system” given command like “retrieve block 
+123” translates to device driver
+– Also manages memory buffers and caches (allocation, freeing, 
+replacement) 
+• Buffers hold data in transit
+• Caches hold frequently used data
+• File organization module understands files, logical 
+address, and physical blocks
+- Translates logical block # to physical block #
+- Manages free space, disk allocation
+22
+File System Layers (Cont.)
+• Logical file system manages metadata 
+information
+– Translates file name into file number, file handle, 
+location by maintaining file control blocks 
+(inodes in UNIX)
+– Directory management
+– Protection
+23
+File Systems
+• Many file systems, sometimes several 
+within an operating system
+– Each with its own format 
+• Windows has FAT (1977), FAT32 (1996), NTFS (1993)
+• Linux has more than 40 types, with extended file 
+system (1992) ext2 (1993), ext3 (2001), ext4 (2008); 
+• plus distributed file systems
+• floppy, CD, DVD Blu-ray 
+– New ones still arriving – ZFS, GoogleFS, Oracle 
+ASM, FUSE, xFAT (USB/SD cards)
+24
+Data and Metadata
+Storage abstraction: 
+• File system metadata (size, free lists), 
+• File metadata (attributes, disk block maps), 
+• Data blocks
+25
+Process, System, Files
+• Process table for a process: File descriptor, pointer
+• System wide open File Table: r/w status, offset, inode
+number
+• Inode table: indexed by inode numbers    (unix: ls –ia)
+– Inode for a file: file/dir metadata, pointers to blocks
+26
+OS File Data Structures
+• Per-process file descriptor table - for each file, 
+– pointer to entry in the open file table 
+FD: int
+– current position in file (offset) 
+– mode in which the process will access the file (r, w, rw) 
+– pointers to file buffer
+• Open file table - shared by all processes with an 
+open file. 
+– open count 
+– Inode number
+• file attributes, including ownership, protection information, 
+access times, ... 
+• pointers to location(s) of file in memory
+27
+Common File Systems
+Journaling: keeps track of changes 
+not yet committed: allows recovery
+File System Max File Size Max Partition Size Journaling Notes
+Fat32 4 GiB 8 TiB No Commonly supported
+ExFAT 128 PiB 128 PiB No Optimized for flash
+NTFS 2 TiB 256 TiB Yes For Windows Compatibility
+ext2 2 TiB 32 TiB No Legacy
+ext3 2 TiB 32 TiB Yes Standard linux filesystem for many years. 
+ext4 16 TiB 1 EiB Yes Modern iteration of ext3. 
+28
+File-System Implementation: Outline
+• In memory/On disk structures
+• Partitions, mounting
+• Disk Block allocation approaches
+29
+File-System Implementation
+• Based on several on-disk and in-memory 
+structures.
+• On-disk
+– Boot control block (per volume) boot block in unix
+– Volume control block (per volume) master file table in UNIX
+– Directory structure (per file system) file names and pointers to 
+corresponding FCBs
+– File control block (per file)  inode in unix
+• In-memory
+– Mount table about mounted volumes
+– The open-file tables (system-wide and per process)
+– Directory structure cache
+– Buffers of the file-system blocks
+Volume: logical disk drive, perhaps a partition
+30
+In-Memory File System Structures
+Opening a file
+fopen( ) returns fid
+Reading a file
+Inode refers to an individual 
+file
+31
+On-disk File-System Structures
+1. Boot control block contains info needed by 
+system to boot OS from that volume
+– Needed if volume contains OS, usually first block 
+of volume Volume: logical disk drive, perhaps a partition
+2. Volume control block (superblock ext or 
+master file tableNTFS) contains volume details
+– Total # of blocks, # of free blocks, block size, free 
+block pointers or array
+3. Directory structure organizes the files
+– File Names and inode numbers UFS, master file 
+table NTFS
+Boot Super Directory, 
+File data blocks
+block block FCBs
+32
+File-System Implementation (Cont.)
+4. Per-file File Control Block (FCB or “inode”)
+contains many details about the file
+– Indexed using inode number; permissions, size, 
+dates UFS (unix file system)
+– master file table  using relational DB structures 
+NTFS
+33
+Create a file
+• Allocates a new FCB.
+• Update directory
+– Reads the appropriate directory into memory,  in 
+unix a directory is a file with special type field
+– updates it with the new file name and FCB, 
+– writes it back to the  disk.
+34
+Partitions and Mounting
+• Partition can be a volume containing a file system 
+(cooked) or raw – just a sequence of blocks with no 
+file system perhaps for swap space
+• Boot block can point to boot volume or boot 
+loader set of blocks that contain enough code to 
+know how to load the kernel from the file system
+• Root partition contains the OS, Mounted at boot 
+time
+– other partitions can hold other OSes, other file systems, 
+or be raw
+– Other partitions can mount automatically or manually
+• At mount time, file system consistency checked
+35
+Virtual File Systems
+• Virtual File Systems (VFS) on Unix provide an object-
+oriented way of implementing file systems
+• VFS allows the same system call interface (the API) to 
+be used for different types of file systems
+• The API (POSIX system calls) is to the VFS interface, 
+rather than any specific type of file system
+Virtual to specific FS interface
+36
+NFS (Network File System)
+• source
+37
+File Sharing – Remote File Systems
+• Uses networking to allow file system access between 
+systems
+– Manually via programs like FTP
+– Automatically, seamlessly using distributed file systems
+– Semi automatically via the world wide web
+• Client-server model allows clients to mount remote 
+file systems from servers
+– Server can serve multiple clients
+– Client and user-on-client identification is insecure or 
+complicated
+– NFS is standard UNIX client-server file sharing protocol
+– CIFS is standard Windows protocol
+– Standard operating system file calls are translated into 
+remote calls
+38
+Directory Implementation
+• Linear list of file names with pointer to the data 
+blocks
+– Simple to program
+– Time-consuming to execute
+• Linear search time
+• Could keep ordered alphabetically via linked list or use B+ 
+tree
+• Hash Table – linear list with hash data structure
+– Decreases directory search time
+– Collisions – situations where two file names hash to 
+the same location. 
+• use chained-overflow method
+• Each hash entry can be a linked list instead of an 
+individual value.
+39
+Disk Block Allocation Methods
+A disk has many physical blocks. How can they be 
+assigned to specific files? 
+40
+Block Allocation Methods 
+An allocation method refers to how disk blocks 
+are allocated for files:
+• Contiguous (not common, except for  DVDs 
+etc.)
+• Linked  (e.g. FAT32)
+• Indexed  (e.g. ex4)
+Thoughts about optimization:
+- Sequential vs random access
+- What is the common file size? 
+41
+Allocation Methods – i.Contiguous
+i. Contiguous allocation – each file occupies set 
+of contiguous blocks
+– Simple – only starting location (block #) and length 
+(number of blocks) are required
+• Occupies n block     b, b+1, …b+n-1
+– Minimal disk head movement
+– Problems include finding space for file, knowing file 
+size, external fragmentation, need for compaction 
+off-line (downtime) or on-line
+42
+Contiguous Allocation
+File tr: 3 blocks
+Starting at block 14
+43
+Contiguous Allocation
+• Mapping logical byte address LA to physical 
+address
+Assume block size =512 bytes
+Q
+LA/512
+R
+– Block to be accessed = starting block number (address) + Q
+– Displacement into block = R 
+44
+Extent-Based Systems
+• Some file systems use a modified contiguous 
+allocation scheme
+• Extent-based file systems allocate disk 
+blocks in extents
+– An extent is a contiguous set of blocks 
+• Metadata: beginning block, number of blocks 
+– Extents are allocated for file allocation
+– A file consists of one or more extents
+45
+Allocation Methods - Linked
+ii. Linked allocation – each file a linked list of 
+blocks
+– Each block contains pointer to next block.
+– File ends at null pointer
+– No external fragmentation, no compaction
+Free space management system called when new 
+block needed
+– Locating a block can take many I/Os and disk 
+seeks.
+– Improve efficiency by clustering blocks into groups 
+but increases internal fragmentation
+– Reliability can be a problem, since every block in a 
+file is linked
+46
+Allocation Methods – Linked (Cont.)
+• FAT (File Allocation Table) variation
+– Beginning of volume has table, indexed by block number
+– Much like a linked list, but faster on disk and cacheable 
+– New block allocation simple
+Each FAT entry corresponds 
+to the corresponding block of 
+Storage.
+Free block entries are also 
+linked.
+47
+Allocation Methods - Indexed
+• Indexed allocation
+– Each file has its own index block(s) of pointers to its data 
+blocks
+Pointers to
+Data blocks
+• Logical view
+index table
+48
+Example of Indexed Allocation
+49
+Indexed Allocation (Cont.)
+• Need index table
+• Random access
+• Dynamic access without external fragmentation, 
+but have overhead of index block even for a small file
+• Assuming pointer size is 1 byte,  block is 512 
+bytes
+• 1 block for index table can be used for a file of 
+maximum size of 512x512 = 256K bytes
+• Larger files?  Multi-block index table?
+50

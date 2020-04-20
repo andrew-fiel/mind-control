@@ -1,0 +1,409 @@
+CS370 Operating Systems
+Colorado State University
+Yashwant K Malaiya
+Spring 2020 L15
+Deadlocks
+Slides based on 
+• Text by Silberschatz, Galvin, Gagne
+• Various sources
+1 1
+FAQ
+• What is the meaning of life? One answer
+• CPU utilization: fraction of the time CPU is actually used. CPU may remain unused  if there is 
+nothing to run.
+• Round robin with different arrival times: next process is picked from the 
+head of ready queue, processes coming from outside/switched out from CPU enter at the tail. Rules for 
+breaking ties.
+• What are resources? Drives, memory blocks, locks for critical sections, etc.
+• Why modern OSs do not actively prevent deadlocks?
+– May be used by embedded/rear-time OSs, 
+– If a process does not progress for a few seconds, the system may generate a message. “.. not 
+responding”
+– data-bases, locked files may checked for deadlocks
+– Some version of Windows and Linux may have capability to check for deadlocks involving 
+locks for critical sections.
+– Use of mechanism by which locks are always acquired in a defined order
+2
+FAQ
+• How does resource ordering help?
+thread one function thread two function 
+void *do_work_one(void *param) void *do_work_two(void *param)
+{ { 
+pthread_mutex_lock(&first_mutex); pthread_mutex_lock(&second_mutex); 
+pthread_mutex_lock(&second_mutex); pthread_mutex_lock(&first_mutex); 
+/** * Do some work */ /** * Do some work */
+pthread_mutex_unlock(&second_mutex); pthread_mutex_unlock(&first_mutex); 
+pthread_mutex_unlock(&first_mutex); pthread_mutex_unlock(&second_mutex); 
+pthread_exit(0); pthread_exit(0); 
+} } 
+thread one function thread two function 
+void *do_work_one(void *param) void *do_work_two(void *param)
+{ { 
+pthread_mutex_lock(&first_mutex); pthread_mutex_lock(&first_mutex); 
+pthread_mutex_lock(&second_mutex); pthread_mutex_lock(&second_mutex); 
+/** * Do some work */ /** * Do some work */
+pthread_mutex_unlock(&second_mutex); pthread_mutex_unlock(&second_mutex); 
+pthread_mutex_unlock(&first_mutex); pthread_mutex_unlock(&first_mutex); 
+pthread_exit(0); pthread_exit(0); 
+} } 
+3
+Methods for Handling Deadlocks
+• Ensure that the system will never enter a deadlock 
+state:
+– Deadlock prevention
+• ensuring that at least one of the 4  conditions cannot hold
+– Deadlock avoidance
+• Dynamically examines the resource-allocation state to ensure that 
+there can never be a circular-wait condition
+• Allow the system to enter a deadlock state 
+– Detect and then recover. Hope is that it happens rarely.
+• Ignore the problem and pretend that deadlocks never 
+occur in the system; used by most operating systems, 
+including UNIX.
+4
+Deadlock Prevention
+For a deadlock to occur, each of the four necessary conditions 
+must hold. By ensuring that at least one of these conditions 
+cannot hold, we can prevent the occurrence of a deadlock.
+Mutual exclusion: only one process at a time can use a 
+resource
+Hold and wait: a process holding at least one resource is 
+waiting to acquire additional resources held by other processes
+No preemption: a resource can be released only voluntarily by 
+the process holding it, after that process has completed its task
+Circular wait: there exists a set {P0, P1, …, Pn} of waiting 
+processes that are circularly waiting.
+5
+Deadlock Avoidance
+Manage resource allocation to 
+ensure the system never enters an 
+unsafe state.
+6
+Deadlock Avoidance
+Requires that the system has some additional a priori information 
+available
+• Simplest and most useful model requires that 
+each process declare the maximum number of 
+resources of each type that it may need
+• Resource-allocation state is defined by the 
+number of available and allocated resources, 
+and the maximum demands of the processes
+• The deadlock-avoidance algorithm dynamically 
+examines the resource-allocation state to 
+ensure that there can never be a circular-wait 
+condition
+– Ensures all allocations result in a safe state
+7
+Deadlock Avoidance: Handling resource requests
+• For each resource request: 
+– Decide whether or not process should wait 
+• To avoid possible future deadlock 
+• Predicated on: 
+1. Currently available resources 
+2. Currently allocated resources 
+3. Future requests and releases of each process
+• Finding a Safe sequence 
+8
+Avoidance: amount and type of information needed 
+• Resource allocation state 
+– Number of available and allocated resources 
+– Maximum demands of processes 
+• Dynamically examine resource allocation state 
+– Ensure circular-wait cannot exist  
+• Simplest model: 
+– Declare maximum number of resources for each type 
+– Use information to avoid deadlock 
+9
+Safe Sequence
+System must decide if immediate allocation leaves the 
+system in a safe state
+System is in safe state if there exists a sequence <P1, 
+P2, …, Pn> of ALL the  processes  such that 
+• for each Pi, the resources that Pi can still request 
+can be satisfied by 
+– currently available resources + 
+– resources held by all the Pj, with j < i
+– That is
+• If Pi resource needs are not immediately available, then Pi
+can wait until all Pj have finished and released resources
+• When Pi terminates, Pi +1 can obtain its needed resources, 
+and so on 
+• If no such sequence exists: system state is unsafe
+10
+Deadlock avoidance: Safe states 
+• If the system can:  
+– Allocate resources to each process in some order 
+• Up to the maximum for the process 
+– Still avoid deadlock 
+– Then it is in a safe state
+• A system is safe ONLY IF there is a safe 
+sequence 
+• A safe state is not a deadlocked state 
+– Deadlocked state is an unsafe state 
+– Not all unsafe states are deadlock
+11
+Safe, Unsafe, Deadlock State 
+Examples of safe and unsafe states in next 3 slides
+12
+Example A: Assume 12 Units in the system 
+Max need Current holding at At T0:
+(initially declared) time T0 9 units allocated
+12-9 = 3 units available 
+P0 10 5
+P1 4 2 A unit could be a drive, 
+a block of memory etc.
+P2 9 2
+• Is the system is in a safe state at time T0?
+– Try sequence  <P1, P0 , P2> 
+– P1 can be given 2 units
+– When P1 releases its resources; there are 5 units
+– P0 uses 5 and subsequently releases them (# 10 now) 
+– P2 can then proceed. 
+• Thus <P1, P0 , P2> is a safe sequence, and at T0 
+system was in a safe state More detailed look
+13
+Example A: Assume 12 Units in the system (timing) 
+Is the state at T0 safe?   Detailed look for instants T0, T1, T2, etc..
+Time                         
+Max Current +2 allo P1 .. .. ..
+need holding to P1 releases 
+all
+T0 T1 T2 T3 T4 T5
+av 3 1 5 0 10 3
+P0 10 5 5 5 10 done 0 0
+P1 4 2 4  done 0 0 0 0
+P2 9 2 2 2 2 2 9 done
+Thus the state at T0 is safe.
+14
+Example B: 12 Units initially available in the system 
+Before T1:
+Max T0 T1 3 units available 
+need safe?
+Av 3 2 At T1:
+2 units available 
+P0 10 5 5
+P1 4 2 2
+P2 9 2 3 Is that OK?
+• At time T1, P2 is allocated 1 more units. Is that a 
+good decision?
+– Now only P1 can proceed (already has 2, and given be given 2 more)
+– When P1 releases its resources; there are 4 units
+– P0 needs 5 more, P2 needs 6 more. Deadlock.
+• Mistake in granting P2 the additional unit.
+• The state at T1 is not a safe state. Wasn’t a good decision.
+15
+Avoidance Algorithms
+• Single instance of a resource type
+– Use a resource-allocation graph scheme
+• Multiple instances of a resource type
+– Use the banker’s algorithm (Dijkstra)
+16
+Resource-Allocation Graph Scheme
+• Claim edge Pi Rj indicated that process Pi
+may request resource Rj; represented by a 
+dashed line. This is new.
+• Claim edge converts to request edge when a 
+process requests a resource
+• Request edge converted to an assignment edge 
+when the  resource is allocated to the process
+• When a resource is released by a process, 
+assignment edge reconverts to a claim edge
+• Requirement: Resources must be claimed a 
+priori in the system
+17
+Resource-Allocation Graph
+- - ->  Claim edges Unsafe
+state
+Suppose P2 requests R2. Can R2 be allocated to P2?
+Although R2 is currently free, we cannot allocate it to P2, since 
+this action will create a cycle getting system in an unsafe state. 
+If P1 requests R2, and P2 requests R1, then a deadlock will 
+occur. 
+18
+Resource-Allocation Graph Algorithm
+• Suppose that process Pi requests a resource Rj
+• The request can be granted only if converting 
+the request edge to an assignment edge does 
+not result in the formation of a cycle in the 
+resource allocation graph
+19
+Banker’s Algorithm: examining a request
+• Multiple instances of resources.
+• Each process must a priori claim maximum use
+• When a process requests a resource,  
+– it may have to wait until the resource becomes 
+available (resource request algorithm)
+– Request should not be granted if the resulting system 
+state is unsafe  (safety algorithm)
+• When a process gets all its resources it must 
+return them in a finite amount of time
+• Modeled after a banker in a small town making 
+loans
+22
+Data Structures for the Banker’s Algorithm 
+Let n = number of processes, and m = number of resources types. 
+• Available: Vector of length m. If available [j] = k, there 
+are k instances of resource type Rj available
+Processes vs resources: 
+• Max: n x m matrix.  If Max [i,j] = k, then process Pi may 
+request at most k instances of resource type Rj
+• Allocation:  n x m matrix.  If Allocation[i,j] = k then Pi is 
+currently allocated k instances of Rj
+• Need:  n x m matrix. If Need[i,j] = k, then Pi may need k
+more instances of Rj to complete its task
+Need [i,j] = Max[i,j] – Allocation [i,j]
+23
+Safety Algorithm: Is System in safe state?
+1. Let Work and Finish be vectors of length m and n, 
+respectively.  Initialize:
+Work = Initially Available resources
+Finish [i] = false for i = 0, 1, …, n- 1    
+2. Find a process i such that both: 
+n = number of processes, 
+(a) Finish [i] = false m = number of resources types
+(b) Needi Work Needi: additional res needed
+If no such i exists, go to step 4 Work: res currently free
+Finishi: processes finished
+3.  Work = Work + Allocationi Allocationi: allocated to i
+Finish[i] = true
+go to step 2
+4. If Finish [i] == true for all i, then the system is in a safe 
+state
+25
+Resource-Request Algorithm for Process Pi
+Notation: Requesti = request vector for process Pi.  
+If Requesti [j] = k then process Pi wants k instances of resource type Rj
+Algorithm: Should the allocation request be granted?
+1. If Requesti  Needi go to step 2.  Otherwise, raise error 
+condition, since process has exceeded its maximum claim
+2. If Requesti  Available, go to step 3.  Otherwise Pi must 
+wait, since resources are not available
+3. Is allocation safe?:   Pretend to allocate requested resources 
+to Pi by modifying the state as follows:
+Available = Available  – Requesti; Use safety 
+Allocationi = Allocationi + Requesti; algorithm here
+Needi = Needi – Requesti;          
+ If safe  the resources are allocated to Pi
+ If unsafe  Pi must wait, and the old resource-allocation state is 
+preserved.
+26
+Example 1A: Banker’s Algorithm
+• 5 processes P0  through P4; 
+• 3 resource types:   A (10 instances),  B (5 instances), and C
+(7 instances)
+The Need 
+• Is it a safe state? matrix is 
+redundant 
+Process Max Allocation Need
+type A B C A B C A B C
+Currently 3 3 2
+available
+P0 7 5 3 0 1 0 7 4 3
+P1 3 2 2 2 0 0 1 2 2
+P2 9 0 2 3 0 2 6 0 0
+P3 2 2 2 2 1 1 0 1 1
+P4 4 3 3 0 0 2 4 3 1
+27
+Example 1A: Banker’s Algorithm
+• Is it a safe state?
+• Yes, since the sequence < P1, P3, P4, P2, P0> satisfies safety criteria 
+Process Max Allocation Need
+type A B C A B C A B C
+Available 3 3 2
+P0 7 5 3 0 1 0 7 4 3
+P1 3 2 2 2 0 0 1 2 2
+P2 9 0 2 3 0 2 6 0 0
+P3 2 2 2 2 1 1 0 1 1
+P4 4 3 3 0 0 2 4 3 1 Why did we 
+choose P1 
+P1  run to completion. Available becomes  [3 3 2]+[2 0 0] = [5 3 2] here?
+P3  run to completion. Available becomes  [5 3 2]+[2 1 1] = [7 4 3]
+P4  run to completion. Available becomes  [7 4 3]+[0 0 2] = [7 4 5]  
+P2 run to completion. Available becomes  [7 4 5]+[3 0 2] = [10 4 7] 
+P0 run to completion. Available becomes  [10 4 7]+[0 1 0] = [10 5 7] all done 
+Hence state above is safe.
+28
+Ex 1B: Assume now  P1 Requests (1,0,2)
+• Check that Requesti  Needi and Requesti ≤ Available.       (1,0,2) ≤ (3,3,2) → true. 
+• Check for safety after pretend allocation.     P1 allocation would be (2 0 0) + (1 0 2)= 302
+Process Max Pretend Need
+Allocation
+type A B C A B C A B C
+Available 2 3 0
+P0 7 5 3 0 1 0 7 4 3
+P1 3 2 2 3 0 2 0 2 0
+P2 9 0 2 3 0 2 6 0 0
+P3 2 2 2 2 1 1 0 1 1
+P4 4 3 3 0 0 2 4 3 1
+Sequence < P1, P3, P4, P0, P2> satisfies safety requirement. 
+Hence state above is safe, thus the allocation would be safe.
+29
+Ex 1C,1D: Additional Requests ..
+• Given State is (same as previous slide)
+Process Max Allocation Need
+type A B C A B C A B C
+available 2 3 0
+P0 7 5 3 0 1 0 7 4 3
+P1 3 2 2 3 0 2 0 2 0
+P2 9 0 2 3 0 2 6 0 0
+P3 2 2 2 2 1 1 0 1 1
+P4 4 3 3 0 0 2 4 3 1
+P4 request for (3,3,0):  cannot be granted  - resources are not available. 
+P0 request for (0,2,0):  cannot be granted since the resulting state is unsafe. 
+30
+Bankers Algorithm: Practical Issues 
+• Processes may not know in advance about 
+their maximum resource needs
+• Number of processes is not fixed
+– Varies dynamically
+• Resources thought to be available can 
+disappear
+• Few systems use this algorithm
+31
+Deadlock Detection
+• Allow system to enter deadlock state. If that 
+happens, detect the deadlock and do something about it. 
+• Detection algorithm
+– Single instance of each resource: 
+• wait-for graph
+– Multiple instances: 
+• detection algorithm (based on Banker’s algorithm)
+• Recovery scheme
+32
+Single Instance of Each Resource Type
+• Maintain wait-for graph (based on resource allocation graph)
+– Nodes are processes
+– Pi  Pj if Pi is waiting for Pj
+– Deadlock if cycles
+• Periodically invoke an algorithm that searches for a 
+cycle in the graph. If there is a cycle, there exists a 
+deadlock
+• An algorithm to detect a cycle in a graph requires an 
+order of n2 operations, where n is the number of 
+vertices in the graph
+33
+Resource-Allocation Graph and  Wait-for Graph
+Resource-Allocation Graph Corresponding wait-for graph
+Has cycles. Deadlock.
+34
+Several Instances of a Resource Type
+Banker’s algorithm: Can requests by all process be 
+satisfied?
+• Available: A vector of length m indicates the 
+number of available (currently free) resources of 
+each type
+• Allocation: An n x m matrix defines the number of 
+resources of each type currently allocated to each 
+process
+• Request: An n x m matrix indicates the current 
+request  of each process.  If Request [i][j] = k, then 
+process Pi is requesting k more instances of 
+resource type Rj.
+35
+COVID-19 Discussion
+Let us take 5 minutes to discuss COVID-19. You are invited 
+to share what you think or know.
+• Measures that are not effective or are least effective.
+• Measures that people don’t talk about, but could be 
+worth trying.
+36

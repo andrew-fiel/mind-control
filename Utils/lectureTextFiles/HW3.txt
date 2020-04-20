@@ -1,0 +1,248 @@
+ 
+ 
+ 
+CS 370: OPERATING SYSTEMS Spring 2020   Colorado State University 
+ 
+ 
+HW3: Programming Assignment   v2.20.2020 5:44PM 
+ 
+WORKING WITH INTER-PROCESS COMMUNICATIONS 
+The objective of this assignment is to write and test programs with pipes and shared memory. 
+Due Date: Thursday, March 05, 2020, 11:00 pm 
+Extended Due Date with 20% penalty: Friday, March 06, 2020, 11:00 pm 
+This is a modification of HW2. In this assignment the Starter first creates a child process using the 
+program CharacterReader that reads a text file, one character at a time and transmits the text to 
+the parent using a pipe. The parent program reads the contents of the pipe and stores it in a one 
+dimensional array. The Starter then creates shared memory segments for each of the three child 
+processes and then invokes the LowAlpha, HighAlpha, and Math executables and passes the entire 
+array at once. The child programs LowAlpha, HighAlpha and Math will determine the type of each 
+character in the array and keep an internal count. Once it has iterated through all the elements in the 
+array, it will write the internally maintained count to the shared memory, which will be read by the 
+Starter. The child processes LowAlpha, HighAlpha and Math executables that are performing the 
+count operations on the passed character array should run concurrently (i.e. not one after the other). 
+ 
+Please see the Notes at the bottom before starting writing your program. 
+ 
+ 
+1.     Description of Task 
+This assignment builds on HW2. Specifically, we will be using interprocess communication (IPC) for 
+communications between the Starter, CharacterReader, LowAlpha, HighAlpha, and Math 
+processes. All instances of LowAlpha, HighAlpha, and Math should run concurrently. LowAlpha, 
+HighAlpha, and Math processes will here on be referred to as LowAlpha/HighAlpha/Math. 
+ 
+1. Starter creates a pipe and forks a child process. The child process executes the 
+CharacterReader program with the name of the .txt file as an argument. CharacterReader 
+will open the file and read the content one character at a time. CharacterReader reads all 
+the characters and makes a single string. CharacterReader then closes the file and then 
+writes the contents (except for ‘\n’ and ‘\r’) to the write end of the pipe it inherited as an 
+argument from the parent process when the parent process called execlp() function. When 
+control returns back to the Starter, it will read the content from the pipe. 
+ 
+2. Starter reads the contents from the pipe and stores it as array elements in the array of 
+characters called charArray[]. The Starter then creates a shared memory segment for each 
+LowAlpha/HighAlpha/Math processes. It then forks three child processes to run the 
+LowAlpha/HighAlpha/Math programs. Each LowAlpha/HighAlpha/Math program should be 
+running concurrently. 
+ 
+3. After counting the type of each character, LowAlpha/HighAlpha/Math program writes the 
+value for the counts to the shared memory segment and the program returns control to 
+Starter. The Starter then reads these shared memory segments and stores these counts to 
+their respective LowAlpha/HighAlpha/Math counters. 
+ 
+4. Starter then prints out these counters to stdout. 
+  
+ 
+ 
+ 
+CS 370: OPERATING SYSTEMS Spring 2020   Colorado State University 
+ 
+ 
+Starter does the following: 
+1. Create a pipe using the following steps. 
+ Create an integer array of size 2, and create a pipe using the integer array. 
+ 
+2. Send the details to the child process CharacterReader using the following steps: 
+ Create a character array of size 16. This is to store the pipe reference as a string. Use 
+sprintf to get the file descriptor of the write end of the pipe into this character array. 
+ Fork a child process, and replace its executable by the CharacterReader executable. 
+ Pass the character array to the CharacterReader as a second argument after file name. 
+ 
+3. Read the content from the pipe into a character array of size 60000 using the following steps: 
+ Close the writing end, and then read the content from the read end of the pipe using the 
+read() function and close this end too. 
+ 
+4. It creates three shared memories with the names “SHM_LowAlpha”, “SHM_HighAlpha”, 
+“SHM_Math”. It then forks three child processes that run the LowAlpha/HighAlpha/Math 
+executable, and each child process gets the appropriate shared memory name, which is sent to 
+the LowAlpha/HighAlpha/Math program, which is sent as the third argument to the 
+execlp() function, the fourth argument to the execlp() function is the  content that is read 
+from the pipe: 
+ The shared memory segment should be of size 32 bytes.  Since a shared memory is 
+created for each child, use O_CREATE and open in read write mode (O_RDWR).   It uses 
+mmap to create a pointer to the shared memory. The name of each shared memory should 
+follow the standard. 
+ Fork a child using execlp and the argumentss it will take are name of the executable, the 
+name of the shared memory and the charArray[].  
+ Once the control returns from LowAlpha/HighAlpha/Math processes, it then reads from 
+the shared memory segment and puts the counts for the character type depending on 
+which child process returned into its own counter variables. 
+ It then writes these counter values to the screen after all the processes have finished 
+execution. 
+ 
+CharacterReader does the following: 
+1. Receives the name of the file and the file descriptor of the write end of the pipe as arguments 
+from the Starter. 
+ 
+2. Using atoi copies the pipe reference which is the third argument in argv into an integer 
+variable. 
+ 
+3. Read the contents from the .txt file ignoring the ‘\n’ and ‘\r’ characters. 
+ 
+4. Write the contents into the pipe. 
+ 
+LowAlpha, HighAlpha, and Math each do the following: 
+1. It receives a shared memory name and a character array.  
+ 
+2. Performs count operation on the character array to get the count of each type of character.  
+Once all the counting is done, the counter value is written to the shared memory, and the 
+control is returned. 
+ 
+Background: For the background of the assignment, review the related material (sec. 3.5.1 POSIX 
+shared memory and 3.6.3.1 ordinary pipes), the related self-exercise example you ran recently and 
+consult the man pages  (shm_open(), ftruncate(), mmap(), shm_unlink()) as needed. You can 
+simply search for “man shm_open()” etc.  Please note that this is not conventional serial C 
+programming. 
+ 
+ 
+ 
+ 
+CS 370: OPERATING SYSTEMS Spring 2020   Colorado State University 
+ 
+ 
+ 
+2.   Task Requirements 
+1. The Starter creates a pipe and checks if pipe creation failed. It then forks a child process to 
+execute CharacterReader. 
+ 
+2. CharacterReader reads the file and writes the text, without ‘\r’ or ‘\n’, to the pipe, and then 
+closes the write end of the pipe.  
+ 
+3. Starter then reads the contents from the read end of the pipe into charArray[]. 
+ 
+4. Starter then creates three shared memory segments with appropriate attributes (truncate to 
+the size of 32 bytes, use mmap with PROT_READ and MAP_SHARED). It prints the name and 
+the file descriptor of the shared memory. 
+ 
+5. Starter then forks appropriate LowAlpha/HighAlpha/Math program as a child process. For 
+each of the LowAlpha/HighAlpha/Math processes, the appropriate shared memory name, is 
+written into the third to last position in the execlp() argument list. The second to last element in 
+the argument list is the character array. The last element in the argument list is set to NULL. 
+Use execlp( ) for executing the LowAlpha/HighAlpha/Math executables. 
+ 
+6. LowAlpha/HighAlpha/Math process performs the count operation on the character array. 
+When all the counts are completed, it copies the final counted value to the shared memory 
+segment. The LowAlpha/HighAlpha/Math process also displays the counted value as per the 
+standards that can be seen in the sample output. 
+ 
+7. Starter then copies the values from the shared memory into the appropriate integer counter 
+variables. It unlinks the shared memory.  It then prints these counter variables to screen, along 
+with the count of characters that are not LowAlpha, HighAlpha, or Math characters. 
+ 
+8. All the LowAlpha/HighAlpha/Math processes should be forked to execute concurrently, that is 
+all of them should be running at the same time.  (Hint: Fork and exec should be in one for loop 
+and wait should be in a different for loop.) 
+ 
+3.   Files Provided 
+Files provided for this assignment include the description file (this file). Sample output files are 
+provided to you on Canvas. 
+You are needed to answer the questions in the README file. 
+ 
+4.   Example Outputs (Note – The process IDs and the order may vary) 
+1. <system_name><folder_path>$ ./Starter input1.txt 
+ 
+Starter[6066]: Created shared memory "SHM_LowAlpha" with FD: 3 
+Starter[6066]: Created shared memory "SHM_HighAlpha" with FD: 4 
+Starter[6066]: Created shared memory "SHM_Math" with FD: 5 
+LowAlpha[6068]: counted 10 
+HighAlpha[6069]: counted 7 
+Math[6070]: counted 1 
+Low alpha:  10 
+High alpha: 7 
+Math:       1 
+Other:      1 
+ 
+ 
+ 
+ 
+CS 370: OPERATING SYSTEMS Spring 2020   Colorado State University 
+ 
+ 
+ 
+2. <system_name><folder_path>$  ./Starter input2.txt 
+ 
+Starter[6361]: Created shared memory "SHM_LowAlpha" with FD: 3 
+Starter[6361]: Created shared memory "SHM_HighAlpha" with FD: 4 
+Starter[6361]: Created shared memory "SHM_Math" with FD: 5 
+LowAlpha[6363]: counted 1378 
+Math[6365]: counted 77 
+HighAlpha[6364]: counted 1340 
+Low alpha:  1378 
+High alpha: 1340 
+Math:       77 
+Other:      747 
+ 
+5.    What to Submit 
+Use the CS370 Canvas to submit a single .zip or .tar file that contains: 
+ All .c files listed below and descriptive comments within, 
+o Starter.c 
+o CharacterReader.c 
+o LowAlpha.c 
+o HighAlpha.c 
+o Math.c 
+ a Makefile that performs both a make build as well as a make clean, 
+ a README.txt file containing a description of each file and any information you feel the grader 
+needs to grade your program, and answers for the 3 questions 
+ 
+For this and all other assignments, ensure that you have submitted a valid .zip/.tar file. After 
+submitting your file, you can download it and examine to make sure it is indeed a valid zip/tar file, by 
+trying to extract it. 
+Filename Convention: The archive file must be named as: <FirstName>-<LastName>-HW3.tar/zip. 
+E.g., if you are John Doe and submitting for assignment 3, then the tar file should be named John-
+Doe-HW3.tar or John-Doe-HW3.zip 
+ 
+6.    Grading 
+The assignments much compile and function correctly on machines in the CSB-120 Lab. Assignments 
+that work on your laptop on your particular flavor of Linux/Mac OS X, but not on the Lab machines 
+are considered unacceptable. 
+The grading will be done on a 100-point scale. The points are broken up as follows: 
+Objective  Points 
+Correctly performing Tasks 1-8 (10 points each) 80 points 
+Descriptive comments for important lines of code 5 points 
+Compilation with no warnings 5 points 
+Providing a working Makefile  5 points 
+Questions in the README file 5 points 
+ 
+ 
+ 
+CS 370: OPERATING SYSTEMS Spring 2020   Colorado State University 
+ 
+ 
+Questions: (To be answered in README file.) 
+1. Name the function that is used to create a pipe. Which ends denotes the read and the write 
+ends of a pipe? (2 points) 
+2. Name the function used to map files or devices in to memory? (1 point) 
+3. Name the function used to open a shared memory object? What does it return? (2 points) 
+ 
+You are required to work alone on this assignment. 
+ 
+7.    Late Policy 
+ 
+Click here for the class policy on submitting late assignments. 
+Notes:  
+1. The filename argument to Starter is mandatory, not optional. 
+2. For your testing purposes two sample input files that are provided. 
+3. This program may not work on your Mac OS X or other systems. Try to run the program on a 
+lab system, if you keep getting a segmentation fault and the code seems correct. 
+ 
+ 
+Revisions: Any revisions in the assignment will be noted below. 

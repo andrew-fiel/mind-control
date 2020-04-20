@@ -1,0 +1,477 @@
+CS370 Operating Systems
+Colorado State University
+Yashwant K Malaiya
+Spring 2020 Lecture 3
+Slides based on 
+• Text by Silberschatz, Galvin, Gagne
+• Various sources
+1 1
+FAQ
+Subroutines/traps/Interrupt service routines
+• Subroutines: program specifies transfer of control
+• Traps: transfer of control to a system routine
+• Interrupt: hardware request transfers control to the 
+interrupt service routine
+Interrupts: Why? How?
+• Interrupt request line is hardware 
+• Interrupt causes transfer of control to Interrupt 
+Service Routine
+• Hence need to save context. Context restored when 
+returning.
+2
+FAQ: DMA, Driver vs Controller
+When is Direct Memory Access (DMA) needed:
+• When a block of data needs to be transferred memory <-> ext
+device (disk or network controller)
+Block transfer using DMA Controller vs CPU
+• CPU needs to fetch instructions for each word transfer: too 
+much overhead
+• DMA Controller, once initialized, doesn’t need to fetch 
+instructions
+• DMA: direct connection between memory and IO device
+Device Driver (software) vs Device controller (hardware):
+• Device controller understands software commands to handle 
+hardware actions
+• Device driver: hides device details from kernel
+3
+Multiprogramming, Multitasking, Multiprocessing
+• Multiprogramming: multiple program under execution at 
+the same time, switching programs when needed (older 
+term)
+• Timesharing (multitasking): sharing a CPU among multiple 
+users using time slicing (older term). Multitasking among 
+people …
+• Multiprocessing: multiple processors in the system 
+running in parallel.
+• Program vs process: a program under execution can 
+constitute one or more processes.
+• Job: (older, somewhat ambiguous term) an executing 
+program or a process
+4
+Today
+• Multiprocessors
+• OS Operations
+• Storage hierarchy
+• OS structures
+• User interfaces
+• System calls
+5
+Multiprocessors
+• Past systems used a single general-purpose processor
+– Most systems have special-purpose processors as well
+• Multiprocessors systems were once special, now are 
+common
+– Advantages include:
+1. Increased throughput
+2. Economy of scale
+3. Increased reliability – graceful degradation or fault tolerance
+– Two types:
+1. Asymmetric Multiprocessing – each processor is assigned a 
+specific task.
+2. Symmetric Multiprocessing – each processor performs all tasks
+6
+Symmetric Multiprocessing Architecture
+FAQ: How does system decide what information should be in cache?
+7
+Multiprocessor
+Multi-chip and multicore
+• Multi-chip: Systems containing all  chips
+– Chassis containing multiple separate systems
+• Multi-core
+8
+Multiprogramming and multitasking
+• Multiprogramming needed for efficiency
+– Single user cannot keep CPU and I/O devices busy at all times
+– Multiprogramming organizes jobs (code and data) so CPU always has one 
+to execute
+– A subset of total jobs in system is kept in memory
+– One job selected and run via job scheduling
+– When it has to wait (for I/O for example), OS switches to another job
+• Timesharing (multitasking) is logical extension in which CPU switches jobs so 
+frequently that users can interact with each job while it is running, creating 
+interactive computing
+– Response time should be < 1 second
+– Each user has at least one program executing in memory process
+– If several jobs ready to run at the same time  CPU scheduling
+– If processes don’t fit in memory, swapping moves them in and out to run
+– Virtual memory allows execution of processes not completely in memory
+9
+Memory Layout for Multiprogrammed System
+10
+Operating-System Operations
+• “Interrupts” (hardware and software)
+– Hardware interrupt by one of the devices 
+– Software interrupt (exception or trap):
+• Software error (e.g., division by zero)
+• Request for operating system service
+• Other process problems like processes 
+modifying each other or the operating 
+system
+11
+Operating-System Operations (cont.)
+• Dual-mode operation allows OS to protect 
+itself and other system components
+called Supervisor mode
+in LC3 processor in P&P book
+– User mode and kernel mode 
+– Mode bit provided by hardware
+• Provides ability to distinguish when system is 
+running user code or kernel code
+• Some instructions designated as privileged, only 
+executable in kernel mode
+• System call changes mode to kernel, return from call 
+resets it to user
+• Increasingly CPUs support multi-mode 
+operations
+– i.e. virtual machine manager (VMM) mode for 
+guest VMs
+12
+Transition from User to Kernel Mode
+• Timer to prevent a process from hogging resources
+– Timer is set to interrupt the computer after some time period
+– Keep a counter that is decremented by the physical clock.
+– Operating system set the counter (privileged instruction)
+– When counter zero generate an interrupt
+– Set up before scheduling process to regain control or 
+terminate program that exceeds allotted time
+• System calls are  executed in the kernel mode
+13
+Process Management
+• A process is a program in execution. It is a unit of work within the 
+system. Program is a passive entity, process is an active entity.
+• Process needs resources to accomplish its task
+– CPU, memory, I/O, files
+– Initialization data
+• Process termination requires reclaim of any reusable resources
+• Single-threaded process has one program counter specifying location 
+of next instruction to execute
+– Process executes instructions sequentially, one at a time, until completion
+• Multi-threaded process has one program counter per thread
+• Typically system has many processes (some user, some operating 
+system), running concurrently on one or more CPUs
+– Concurrency by multiplexing the CPUs among the processes / threads
+14
+Process Management Activities
+The operating system is responsible for the following 
+activities in connection with process management:
+• Creating and deleting both user and system processes
+• Suspending and resuming processes
+• Providing mechanisms for 
+– process synchronization
+– process communication
+– deadlock handling
+15
+Memory &  Storage Management
+16
+K-scale: Amount of information/storage
+Byte (B) = 8 bits (b)
+Kibibyte?
+• A kilobyte, or KB, is 1,024  (or 210) bytes
+• a megabyte, or MB, is 1,0242 (or 220) bytes
+• a gigabyte, or GB, is 1,0243 bytes
+• a terabyte, or TB, is 1,0244 bytes 
+• a petabyte, or PB, is 1,0245 bytes
+17
+Storage Structure Memory
+for short
+• Main memory – only large storage media that the CPU can access directly
+– Random access Disk
+– Typically volatile (except for ROM) for short
+• Secondary storage – extension of main memory that provides large nonvolatile
+storage capacity 
+– Hard disks (HDD) – rigid platters covered with magnetic recording material 
+• Disk surface divided into tracks, which are subdivided into sectors
+• The disk controller – transfers between the device and the processor 
+– Solid-state disks (SSD) – faster than hard disks, lower power consumption
+• More expensive, but becoming more popular
+• Tertiary/removable storage
+– External disk, thumb drives, cloud backup etc.
+18
+Storage Hierarchy
+• Storage systems organized in hierarchy
+– Speed
+– Cost
+– Volatility
+• Caching – copying information into faster 
+storage system; main memory can be 
+viewed as a cache for secondary storage
+• Device Driver for each device controller to 
+manage I/O
+– Provides uniform interface between 
+controller and kernel
+19
+Storage-Device Hierarchy
+One or 
+the other
+20
+Performance of Various Levels of Storage
+Movement between levels of storage hierarchy can be explicit or implicit
+• Cache managed by hardware. Makes main memory appear much 
+faster.
+• Disks are several orders of magnitude slower.
+21
+Multilevel  Caches
+• Cache: between registers and main memory
+– Cache is faster and smaller than main memory
+– Makes main memory appear to be much faster, if the stuff is 
+found in the cache much of the time
+– Hardware managed because of speed requirements
+• Multilevel caches
+– L1: smallest and fastest of the three (about 4 cycles)
+– L2: bigger and slower than L1 (about 10 cycles)
+– L3: bigger and slower than L2  (about 50 cycles)
+– Main memory: bigger and slower than L3 (about 150 cycles)
+• You can mathematically show that multi-level caches 
+improve performance with usual high hit rates.
+22
+Concept: Caching
+• Important principle, performed at many levels in a 
+computer (in hardware, operating system, software)
+• Information in use copied from slower to faster storage 
+temporarily
+• Faster storage (cache) checked first to determine if 
+information is there
+– If it is, information used directly from the cache (fast)
+– If not, data copied to cache and used there Cache la 
+• Cache smaller than storage being cached Poudre?
+– Cache management important design problem
+– Cache size and replacement policy
+• Examples: “cache”, browser cache ..
+23
+Means main Memory Management
+memory here
+• To execute a program all (or part) of the instructions must 
+be in memory
+• All  (or part) of the data that is needed by the program 
+must be in memory.
+• Memory management determines what is in memory and 
+when
+– Optimizing CPU utilization and computer response to users
+• Memory management activities CPU 
+scheduling
+– Keeping track of which parts of memory are currently being 
+used and by whom
+– Deciding which processes (or parts thereof) and data to 
+move into and out of memory
+– Allocating and deallocating memory space as needed
+24
+Storage Management
+• OS provides uniform, logical view of information 
+storage
+– Abstracts physical properties to logical storage unit  - file
+– Each medium is controlled by device (i.e., disk drive, tape 
+drive)
+• Varying properties include access speed, capacity, data-
+transfer rate, access method (sequential or random)
+• File-System management
+– Files usually organized into directories
+– Access control on most systems to determine who can 
+access what
+– OS activities include
+• Creating and deleting files and directories
+• Primitives to manipulate files and directories
+• Mapping files onto secondary storage
+• Backup files onto stable (non-volatile) storage media
+25
+Mass-Storage Management
+• Usually disks used to store data that does not fit in 
+main memory or data that must be kept for a “long”
+period of time
+• Entire speed of computer operation hinges on disk 
+subsystem and its algorithms
+• OS activities
+– Free-space management
+– Storage allocation
+– Disk scheduling
+• Some storage need not be fast
+– Tertiary storage includes optical storage, magnetic tape
+– Still must be managed – by OS or applications
+– Varies between WORM (write-once, read-many-times) 
+and RW (read-write)
+26
+Migration of data “A” from Disk to Register
+• Multitasking environments must be careful to use most 
+recent value, no matter where it is stored in the storage 
+hierarchy
+• Multiprocessor environment must provide cache coherency 
+in hardware such that all CPUs have the most recent value in 
+their cache
+• Distributed environment situation even more complex
+– Several copies of a datum can exist
+– Various solutions covered in Chapter 19 (will not get to it)
+27
+CS370 Operating Systems
+Colorado State University
+Yashwant K Malaiya
+Spring 2019 OS Structures
+Slides based on 
+• Text by Silberschatz, Galvin, Gagne
+• Various sources
+28 28
+Chap2:  Operating-System Structures
+Objectives:
+• Services OS provides to users, processes, and other 
+systems
+• Structuring an operating system
+• How operating systems are designed and 
+customized and how they boot
+29 29
+OS  Services for the User 1/3
+• Operating systems provide an environment for execution of 
+programs and services to programs and users
+– User interface - Almost all operating systems have a user 
+interface (UI).
+• Varies between Command-Line (CLI), Graphics User 
+Interface (GUI), Batch
+– Program execution - The system must be able to load a 
+program into memory and to run that program, end execution, 
+either normally or abnormally (indicating error)
+– I/O operations - A running program may require I/O, which 
+may involve a file or an I/O device
+30
+OS services for the User 2/3 (Cont.)
+– File-system operations - read and write files and directories, 
+create and delete them, search them, list file Information, 
+permission management.
+– Communications – Processes may exchange information, on the 
+same computer or between computers over a network
+• via shared memory or through message passing (packets 
+moved by the OS)
+– Error detection – OS needs to be constantly aware of possible 
+errors
+• May occur in the CPU and memory hardware, in I/O devices, in 
+user program
+• For each type of error, OS should take the appropriate action to 
+ensure correct and consistent computing
+31
+OS services for system 3/3 (Cont.)
+• OS functions for ensuring the efficient resource sharing
+– Resource allocation - When  multiple users or multiple jobs 
+running concurrently, resources must be allocated to each of 
+them
+• Many types of resources - CPU cycles, main memory, file 
+storage, I/O devices.
+– Accounting - To keep track of which users use how much and 
+what kinds of computer resources
+– Protection and security - concurrent processes should not 
+interfere with each other
+• Protection involves ensuring that all access to system 
+resources is controlled
+• Security of the system from outsiders requires user 
+authentication, extends to defending external I/O devices 
+from invalid access attempts
+32
+A View of Operating System Services
+33
+User Operating System Interface - CLI
+CLI or command interpreter allows direct command 
+entry
+– Sometimes implemented in kernel, sometimes by systems 
+program
+– Sometimes multiple flavors implemented – shells
+– Primarily fetches a command from user and executes it
+– Sometimes commands built-in, sometimes just names of 
+programs
+• If the latter, adding new features doesn’t require shell modification
+Ex:
+Windows:  command prompt
+Linux:   bash
+34
+Shell Command Interpreter
+A bash session
+35
+Common bash commands 1/2
+pwd print Working directory
+ls -l Files in the working dir –long format
+cd  dirpath Change to dirpath dir
+.     ..      ~username       / This dir , upper, usename’s home, root
+cp f1  d1 Copy f1 to dir d1
+mv f1 d1 Move f1 to d1
+rm f1 f2 Remove f1, f2
+mkdir d1 Create directory d1
+which x1 Path for executable file x1
+man cm    help cm Manual entry or help with command cm
+ls > f.txt Redirect command std output to f.txt,  >> to append
+sort < list.txt Std input from file
+ls –l | less Pipe first command into second
+36
+Common bash commands  2/2
+echo $((expression)) Evaluate expression
+echo $PATH Show PATH
+echo $SHELL Show default shell
+chmod 755 dir Change dir permissions to 755
+jobs       ps List jobs for current shell,    processes in the system
+kill id Kill job or process with given id
+cmd & Start job in background
+fg id Bring job id to foreground
+ctrl-z  followed by bg or fg Suspend job and put it in background
+w       who Who is logged on
+ping ipadd Get a ping from ipadd
+ssh user@host Connect to host as user
+grep pattern files Search for pattern in files
+Ctrl-c Halt current command
+37
+User Operating System Interface - GUI
+• User-friendly desktop metaphor interface
+– Usually mouse, keyboard, and monitor
+– Icons represent files, programs, actions, etc
+– Various mouse buttons over objects in the interface cause 
+various actions (provide information, options, execute 
+function, open directory (known as a folder)
+– Invented at Xerox PARC in 1973
+• Most systems now include both CLI and GUI interfaces
+– Microsoft Windows is GUI with CLI “command” shell
+– Apple Mac OS X is “Aqua” GUI interface with UNIX kernel 
+underneath and shells available
+– Unix and Linux have CLI with optional GUI interfaces (CDE, 
+KDE, GNOME)
+38
+Touchscreen Interfaces
+• Touchscreen devices 
+require new interfaces
+• Mouse not possible or not desired
+• Actions and selection based on 
+gestures
+• Virtual keyboard for text entry
+• Voice commands.
+39
+The Mac OS X GUI
+40
+System Calls
+• Programming interface to the services provided by the OS
+• Typically written in a high-level language (C or C++)
+• Mostly accessed by programs via a high-level Application 
+Programming Interface (API) rather than direct system call 
+use
+• Three most common APIs are Win32 API for Windows, 
+POSIX API for POSIX-based systems (including virtually all 
+versions of UNIX, Linux, and Mac OS X), and Java API for 
+the Java virtual machine (JVM)
+Note that the system-call names used throughout our 
+text are generic.
+41
+Example of System Calls
+• System call sequence to copy the contents of one file 
+to another file
+42
+Example of Standard API
+unistd.h header file provides 
+access to the POSIX API
+43
+System Call Implementation
+• The caller need know nothing about how the 
+system call is implemented
+– Just needs to obey API and understand what OS will do 
+as a result call
+– Most details of  OS interface hidden from programmer 
+by API  
+• Managed by run-time support library (set of functions built 
+into libraries included with compiler)
+• System call implementation examples: In LC3 
+Traps are 
+– LC-3 Trap x21 (OUT)  code in Patt & Patel (see slide 22) system 
+– Identified by a number that leads to address of the calls
+routine
+– Arguments provided in designated registers
+– Linux x86_64 table, code snippets
+44

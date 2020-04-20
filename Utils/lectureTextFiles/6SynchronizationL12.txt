@@ -1,0 +1,530 @@
+CS370 Operating Systems
+Colorado State University
+Yashwant K Malaiya
+Spring 2020 L12
+Synchronization (Chap 6, 7)
+Slides based on 
+• Text by Silberschatz, Galvin, Gagne
+• Various sources
+1 1
+FAQ
+Notes: we are using the terms in a generic way. There are specific implementations for 
+POSIX and Java. 
+• Lock: Critical section is locked by one processes at a time.  Software/hardware
+• Atomic instructions: ISA  (not high level like C)
+• Mutex (0 or 1): for mutual exclusion (lock). Owned by the locking process 
+which acquires/releases by wait( )/signal ( ).
+• Semaphores (any integer value): general, may be used for 
+counting resources/waiting processes. Shared.
+– 0:  no waiting threads
+– Positive: no waiting threads, a wait operation would not put the invoking thread in 
+queue. 
+– Negative: number of processes/threads waiting
+• Semaphore implementation
+– Hardware/software solutions to ensure wait() and signal( ) atomic.
+2
+Project
+• See Document: Schedule/Proj Proposal or Canvas/Assignments
+• Choices: Research (topics provided) or development (IoT). Some 
+research/original thinking required for either.
+• Deadlines: subject to revision.
+– D1. Team composition and idea proposal, Thurs 
+2/27/2020
+– D2. Progress report, Thurs 4/2/2020
+– D3. Slides and final reports, Thurs 4/30/2020
+– D4A. Posters session for Option A 5/5 or 5/7 (TBD). Also 
+Submit poster electronically on Canvas same day.
+– D4B. Demos of Option B projects to be scheduled during 5/5 or 5/7.
+– D5: Peer Reviews due 5/9/2020 Sat
+3
+Classical Problems of Synchronization
+• Classical problems 
+– Bounded-Buffer Problem
+– Readers and Writers Problem
+– Dining-Philosophers Problem
+• Bounded buffer Review
+– n buffers, each can hold one item
+– Binary semaphore (mutex) 
+• Provides mutual exclusion for accesses to buffer pool 
+• Initialized to 1 
+– Counting semaphores 
+• empty: Number of empty slots available, Initialized to n 
+• full: Number of filled slots available n, Initialized to 0 
+4
+Readers-Writers Problem
+• A data set is shared among a number of 
+concurrent processes
+– Readers – only read the data set; they do not perform 
+any updates
+– Writers   – can both read and write
+• Problem 
+– allow multiple readers to read at the same time
+– Only one single writer can access the shared data at the 
+same time. No readers permitted when writer is 
+accessing the data.
+• One Mutex & two counting semaphores: empty, 
+full
+5
+Dining-Philosophers Problem
+• Philosophers spend their lives alternating thinking and eating
+• Don’t interact with their neighbors, occasionally try to pick up 2 
+chopsticks (one at a time) to eat from bowl
+– Need both to eat, 
+– then release both when done
+• Each chopstick is a semaphore
+– Grab by executing wait ( )
+– Release by executing signal ( )
+• Shared data 
+• Bowl of rice (data set)
+• Semaphore chopstick [5] initialized to 1
+6
+Dining-Philosophers Problem
+Plato, Confucius, Socrates, Voltaire and Descartes
+7
+Dining-Philosophers Problem Algorithm: Simple solution?
+• The structure of Philosopher i:
+do { 
+wait (chopstick[i] );
+wait (chopStick[ (i + 1) % 5] );
+//  eat
+signal (chopstick[i] );
+signal (chopstick[ (i + 1) % 5] );
+//  think
+} while (TRUE);
+• What is the problem with this algorithm?
+– If all of them pick up the the left chopstick first  -
+Deadlock
+8
+Dining-Philosophers Problem Algorithm (Cont.)
+• Deadlock handling
+– Allow at most 4 philosophers to be sitting 
+simultaneously at  the table (with the same 5 forks).
+– Allow a philosopher to pick up  the forks only if 
+both are available (picking must be done in a critical 
+section.
+– Use an asymmetric solution  -- an odd-numbered  
+philosopher picks  up first the left chopstick and 
+then the right chopstick. Even-numbered  
+philosopher picks  up first the right chopstick and 
+then the left chopstick. 
+9
+Related classes
+• Classes that follow CS370
+– CS455 Distributed Systems  Spring
+– CS457 Networks  Fall
+– CS470 Computer Architecture  Spring
+– CS475 Parallel Programming  Fall
+– CS435: Introduction to Big Data  Spring
+– CS530 Fault tolerant computing   Spring
+– CS559 Quant Security  Fall
+10
+Problems with Semaphores
+• Incorrect use of semaphore operations:
+– Omitting  of wait (mutex) 
+• Violation of mutual exclusion
+– or signal (mutex)
+• Deadlock!
+• Solution: 
+– Monitors: a higher level implementation of 
+synchronization
+11
+Monitors
+12
+Monitors
+• Monitor: A high-level abstraction that provides a 
+convenient and effective mechanism for process 
+synchronization
+• Abstract data type, internal variables only accessible 
+by code within the procedure
+• Only one process may be active within the monitor at 
+a time
+– Automatically provide mutual exclusion
+– Implement waiting for conditions
+• Queues:
+- for entry
+- for each condition
+• Originally proposed for Concurrent Pascal 1975
+• Directly supported by Java but not C
+13
+Monitors
+• Only one process may be active in the monitor. 
+• A generic monitor construct is used here. Implementation 
+varies by language.
+monitor monitor-name
+{
+// shared variable declarations
+procedure P1 (…) { …. }
+procedure Pn (…) {……}
+Initialization code (…) { … }
+}
+}
+14
+Preliminary Schematic view of a Monitor
+Only one process/thread in 
+the Monitor
+• Provides an easy way to 
+achieve mutual exclusion
+But … we also need a way for 
+processes to block
+when they cannot proceed.
+• Refinement next …
+Shows 4 processes waiting in the queue.
+15
+Condition Variables
+Compare with semaphore.
+The condition construct
+Here no integer value is associated.
+• condition x, y;
+• Two operations are allowed on a condition 
+variable:
+– x.wait() – a process that invokes the operation 
+is suspended until x.signal() 
+– x.signal() – resumes one of processes (if any)
+that invoked x.wait()
+• If no x.wait() on the condition variable, then it has no 
+effect on the variable. Signal is lost.
+16
+Difference between the signal() in semaphores and monitors 
+• Condition variables in Monitors: Not persistent 
+– If a signal is performed and no waiting threads? 
+• Signal is simply ignored 
+– During subsequent wait operations 
+• Thread blocks 
+• Compare with semaphores 
+– Signal increments semaphore value even if there 
+are no waiting threads 
+• Future wait operations would immediately 
+succeed! 
+17
+Monitor with Condition Variables
+18
+Condition Variables Choices
+• If process P invokes x.signal(), and process Q is 
+suspended in x.wait(), what should happen next?
+– Both Q and P cannot execute in parallel. If Q is resumed, 
+then P must wait
+• Options include
+– Signal and wait – P waits until Q either leaves the monitor or 
+it waits for another condition
+– Signal and continue – Q waits until P either leaves the 
+monitor or it  waits for another condition
+– Both have pros and cons – language implementer can decide
+– Monitors implemented in Concurrent Pascal (‘75) 
+compromise
+• P executing signal immediately leaves the monitor, Q is resumed
+• Implemented in other languages including C#, Java
+19
+Monitor Solution to Dining Philosophers: Deadlock-free
+enum {THINKING,HUNGRY,EATING} state[5];
+• state[i] = EATING only if
+– state[(i+4)%5] != EATING &&   state[(i+1)%5] != EATING !
+• condition self[5]
+– Delay self when HUNGRY but unable to get chopsticks
+Sequence of actions
+• Before eating, must invoke pickup()
+– May result in suspension of philosopher process
+– After completion of operation, philosopher may eat
+think
+DiningPhilosophers.pickup(i);
+eat
+DiningPhilosophers.putdown(i);
+think
+20
+Monitor Solution to Dining Philosophers: Deadlock-free
+enum {THINKING,HUNGRY,EATING} state[5];
+state((i+4)%5) state(i) state((i+1)%5)
+Process Process 
+Process i
+(i+4)%5 (i+1)%5
+test((i+4)%5) test(i) test((i+1)%5)
+Can I eat? If not, I’ll wait
+21
+The pickup() and putdown()   operations
+monitor DiningPhilosophers
+{ 
+enum { THINKING, HUNGRY, EATING} state [5] ; Suspend self if 
+condition self [5];
+unable  to acquire 
+void pickup (int i) { chopstick
+state[i] = HUNGRY;
+test(i);   //below
+if (state[i] != EATING) self[i].wait;
+} Eat only if HUNGRY 
+and Person on Left 
+void putdown (int i) { AND Right
+state[i] = THINKING;
+are not eating
+// test left and right neighbors
+test((i + 4) % 5);
+test((i + 1) % 5);
+} void test (int i) { 
+if ((state[(i + 4) % 5] != EATING) &&
+(state[i] == HUNGRY) &&
+(state[(i + 1) % 5] != EATING) ) { 
+state[i] = EATING ;
+Check to see if person self[i].signal () ;
+}
+on left or right can use } Signal a process that 
+the chopstick was suspended while 
+initialization_code() { 
+trying to eat
+for (int i = 0; i < 5; i++)
+state[i] = THINKING;
+}
+}
+22
+Possibility of starvation
+• Philosopher i can starve if eating periods of
+philosophers on left and right overlap
+• Possible solution
+– Introduce new state: STARVING
+– Chopsticks can be picked up if no neighbor is 
+starving
+• Effectively wait for neighbor’s neighbor to stop eating
+• REDUCES concurrency!
+23
+Monitor Implementation of Mutual Exclusion
+For each monitor  
+• Semaphore mutex initialized to 1  
+• Process must execute 
+– wait(mutex)  :  Before entering the monitor 
+– signal(mutex):  Before leaving the monitor 
+24
+Resuming Processes within a Monitor
+• If several processes queued on condition 
+x, and x.signal() is executed, which should 
+be resumed?
+• FCFS frequently not adequate 
+• conditional-wait construct of the form 
+x.wait(c)
+– Where c is priority number
+– Process with lowest number (highest priority) 
+is scheduled next
+27
+Single Resource allocation 
+• Allocate a single resource among competing processes using 
+priority numbers that specify the maximum time a process  plans to 
+use the resource
+R.acquire(t);
+...
+access the resource;
+...
+R.release;
+• Where R is an instance of  type ResourceAllocator
+• A monitor based solution next.
+28
+A Monitor to Allocate Single Resource
+monitor ResourceAllocator
+{ 
+boolean busy; 
+condition x; 
+Sleep, Time used 
+void acquire(int time) { to prioritize 
+if (busy) waiting 
+x.wait(time);  processes
+busy = TRUE; 
+} 
+void release() { 
+busy = FALSE; 
+Wakes up 
+x.signal(); 
+one of the 
+} processes
+initialization code() {
+busy = FALSE; 
+}
+}
+29
+Java Synchronization
+• For simple synchronization,  Java provides the synchronized 
+keyword
+– synchronizing methods
+public synchronized void increment() { c++; } 
+– synchronizing blocks
+synchronized(this) {
+lastName = name;
+nameCount++;
+}
+• wait() and notify() allows a thread to  wait for an event. A call to 
+notifyAll() allows all threads that are on wait() with the same 
+lock to be notified.
+• notify() notifies one thread from a pool of identical threads, 
+notifyAll() when threads have different purposes
+• For more sophisticated locking mechanisms, starting from Java 
+5, the package java.concurrent.locks provides additional locking
+30
+Java Synchronization
+https://www.baeldung.com/java-wait-notify
+• Each object automatically has a monitor (mutex) associated with it
+• When a method is synchronized, the runtime must obtain the lock on the object's monitor before 
+execution of that method begins (and must release the lock before control returns to the calling 
+code)
+• wait() and notify() allows a thread to  wait for an event. 
+• wait( ): Causes the current thread to wait until another thread invokes the notify() method or 
+the notifyAll() method for this object.
+• notify(): Wakes up a single thread that is waiting on this object's monitor. If any threads are waiting 
+on this object, one of them is chosen to be awakened.
+• A call to notifyall() allows all threads that are on wait() with the same lock to be released
+31
+Java Synchronization: Dining Philosiphers
+public synchronized void pickup(int i) private synchronized void test(int i) {
+throws InterruptedException { if (state[left(i)] != State.EATING &&
+setState(i, State.HUNGRY); state[right(i)] != State.EATING &&
+test(i); state[i] == State.HUNGRY)
+while (state[i] != State.EATING) { {
+this.wait(); setState(i, State.EATING);
+// Recheck condition in loop, // Wake up all waiting threads
+// since we might have been notified this.notifyAll();
+// when we were still hungry }
+} }
+}
+public synchronized void putdown(int i) {
+setState(i, State.THINKING);
+test(right(i));
+test(left(i));
+}
+32
+Synchronization Examples
+• Solaris
+• Windows
+• Linux
+• Pthreads
+33
+Solaris Synchronization
+• Implements a variety of locks to support multitasking, 
+multithreading (including real-time threads), and 
+multiprocessing
+• Uses adaptive mutexes for efficiency when protecting 
+data from short code segments
+– Starts as a standard semaphore spin-lock
+– If lock held, and by a thread running on another CPU, spins
+– If lock held by non-run-state thread, block and sleep waiting for signal of lock being released
+• Uses condition variables
+• Uses readers-writers locks when longer sections of code 
+need access to data
+• Uses turnstiles to order the list of threads waiting to 
+acquire either an adaptive mutex or reader-writer lock
+– Turnstiles are per-lock-holding-thread, not per-object
+• Priority-inheritance per-turnstile gives the running thread 
+the highest of the priorities of the threads in its turnstile
+34
+Windows Synchronization
+• Uses interrupt masks to protect access to global 
+resources on uniprocessor systems
+• Uses spinlocks on multiprocessor systems
+– Spinlocking-thread will never be preempted
+• Also provides dispatcher objects user-land 
+which may act mutexes, semaphores, events, 
+and timers
+– Events
+• An event acts much like a condition variable
+– Timers notify one or more thread when time expired
+– Dispatcher objects either signaled-state (object 
+available) or non-signaled state (thread will block)
+35
+Linux Synchronization
+• Linux:
+– Prior to kernel Version 2.6, disables interrupts to 
+implement short critical sections
+– Version 2.6 and later, fully preemptive
+• Linux provides:
+– Semaphores
+– atomic integers
+– spinlocks
+– reader-writer versions of both
+• On single-cpu system, spinlocks replaced by 
+enabling and disabling kernel preemption
+36
+Pthreads Synchronization
+• Pthreads API is OS-independent
+• It provides:
+– mutex locks
+– condition variable
+• Non-portable extensions include:
+– read-write locks
+– spinlocks
+37
+Alternative Approaches
+• Transactional Memory
+• OpenMP
+• Functional Programming Languages
+38
+Transactional Memory
+• A memory transaction is a sequence of 
+read-write operations to memory that are 
+performed atomically without the use of 
+locks.
+void update(){
+atomic{
+/* modify shared data*/
+}
+}
+May be implemented by hardware or software.
+39
+OpenMP
+• OpenMP is a set of compiler directives and 
+API that support parallel progamming.
+void update(int value)
+{
+#pragma omp critical
+{
+count += value
+}
+}
+The code contained within the #pragma omp critical  
+directive is treated as a critical section and performed 
+atomically.
+40
+CS370 Operating Systems
+Colorado State University
+Yashwant K Malaiya
+Spring 2020
+Deadlock
+Slides based on 
+• Text by Silberschatz, Galvin, Gagne
+• Various sources
+41 41
+Chapter 8:  Deadlocks
+• System Model
+• Deadlock Characterization
+• Methods for Handling Deadlocks
+– Deadlock Prevention
+– Deadlock Avoidance resource-allocation
+– Deadlock Detection 
+– Recovery from Deadlock 
+44
+Deadlock
+• Can you give a real life example of a deadlock?
+45
+A Kansas Law
+• Early 20th century Kansas Law
+– “When two trains approach each other at a 
+crossing, both shall come to a full stop and neither 
+shall start up again until the other has gone” 
+• Story of the two silly goats: Aesop 6th cent BCE?
+46
+A contemporary example
+47
+System Model
+• System consists of resources
+• Resource types R1, R2, . . ., Rm
+CPU cycles, memory space, I/O devices
+• Each resource type Ri has Wi instances.
+• Each process utilizes a resource as follows:
+– request 
+– use 
+– release
+48
+Example of a Resource Allocation Graph
+P1 holds an instance of 
+R2, and is requesting R1 ..
+If the graph contains no Does a deadlock exist 
+cycles, then no process in here?
+the system is deadlocked. 
+If the graph does contain a 
+cycle, then a deadlock 
+may exist. P3 will eventually be done 
+with R3, letting P2 use it.
+Thus P2 will be eventually 
+done, releasing R1. …
+49

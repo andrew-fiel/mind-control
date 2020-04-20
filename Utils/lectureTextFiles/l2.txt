@@ -1,0 +1,470 @@
+CS370 Operating Systems
+Colorado State University
+Yashwant K Malaiya
+Spring 2020 Lecture 2
+Slides based on 
+• Text by Silberschatz, Galvin, Gagne
+• Various sources
+1 1
+FAQ
+Logistics:
+• Help Sessions: material not covered in lectures
+– Required: attend or watch video.
+– Coming Wed (room TBA, time perhaps 5:30-6) : HW1 inc C pointers, 
+dynamic memory allocation, makefiles, Valgrind
+• On-line quizzes
+– Released Fri evening, due Monday evening 11 PM.
+– Allow enough time. Some may take 30-40 minutes or more.
+– No collaboration of any type among the students is allowed.
+2
+FAQ
+Programming assignments:
+• You must  work individually. No collaboration is permitted.
+– No one takes over someone else’s keyboard
+– No code may be copied and pasted from anywhere, unless provided by us
+– TAs will check to ensure there was no collaboration.
+• Requirements (C/Java/Python): 
+– submissions must compile and run on machines in the CSB-120 Linux 
+lab.
+• C and Java: You will provide your own makefile
+– the TAs will test them on department machines. 
+– More details in assignment documents
+– HW1 will be available today
+3
+Interactions on Piazza
+• Should be checked daily.
+• Updates will be shared on Piazza.
+• You can have discussions with your peers and GTAs.
+• But note
+– No code can be exchanged under any circumstances
+• Appropriate use expected
+• Private posts: seen only by the TAs and instructors
+4
+Today
+• History and major developments
+• Input/output
+– Interrupts
+– DMA
+• Multiprocessor, Multiprogramming, Multitasking
+• Memory
+• Storage
+5
+From Operator to Operating System
+Switchboard Operator
+©UCB
+Computer Operators
+6
+What is an Operating System?
+7
+What is an Operating System?
+• Referee
+– Manage sharing of resources, Protection, Isolation
+• Resource allocation, isolation, communication
+• Illusionist
+– Provide clean, easy to use abstractions of physical 
+resources
+• Infinite memory, dedicated machine
+• Higher level objects: files, users, messages
+• Masking limitations, virtualization
+• Glue
+– Common services
+• Storage, Window system, Networking
+• Sharing, Authorization
+• Look and feel
+8
+A Modern processor: SandyBridge
+• Package: LGA 1155 • Transistor count:
+– 1155 pins – 504 Million (2 cores, 3MB L3)
+– 95W design envelope
+– 2.27 Billion (8 cores, 20MB L3)
+• Cache: 
+– L1: 32K Inst, 32K Data • Note that ring bus is on high metal layers –
+(3 clock access) above the Shared L3 Cache
+– L2: 256K (8 clock access)
+– Shared L3: 3MB – 20MB 
+9 (not out yet)
+Functionality comes with great complexity!
+SandyBridge I/O
+Configuration
+Proc
+Caches
+Busses
+adapters
+Memory
+Controllers
+Disks
+I/O Devices:
+Displays Networks
+Keyboards
+10
+Short History of Operating Systems
+• One application at a time
+– Had complete control of hardware
+• Batch systems
+– Keep CPU busy by having a queue of jobs
+– OS would load next job while current one runs
+1960s
+• Multiple programs on computer at same time 80286 
+(1984)
+– Multiprogramming: run multiple programs at 
+seemingly at the “same time”
+– Multiple programs by multiple or single user Dual 
+core 
+• Multiple processors in the same computer 2004
+• Multiple OSs on the same computer
+11
+One Processor One program View 
+Early processors (LC-3 is an example)
+• Instructions and data fetched from Main Memory using 
+a program counter (PC)
+• Traps and Subroutines
+– Obtaining address to branch to, and coming back
+– Using Stack Frames for holding
+• Prior PC, FP
+• Arguments and local variables
+• Dynamic memory allocation and heap
+• Global data
+12
+One Processor One program View 
+• External devices: disk, network, screen, keyboard etc.
+• Device interface: Status and data registers
+• User and Supervisor modes for processor
+– User mode (for user programs)
+• Some resources cannot be used directly by a user program
+• Need system calls (traps) for IO operations 
+– Supervisor (or Kernel) mode (privileged mode for kernel) 
+• Access to all resources
+• Input/output operations are done in kernel mode, hence require system calls.
+• I/O
+– Device drivers can use polling or interrupt Enough 
+– Interrupts need context switch info to 
+resume
+– I/O done in supervisor mode
+– System calls invoke devise drivers
+13
+What a simple view don’t include
+• Cache between CPU and main memory
+– Makes the main memory appear much faster
+• Direct memory access (DMA) between Main Memory 
+and Disk (or network etc)
+– Transfer by blocks at a time
+• Neglecting the fact that memory access slower than 
+register access
+• Letting program run concurrently (Multiprogramming) 
+or with many threads
+• Multiple processors in the system (like in Multicore)
+14
+Student Introductions (Partly)
+15
+Information transfer in a system
+• CPU Registers – (Caches) - Memory
+– CPU addresses memory locations
+– Bytes/words at a time
+– We will see some details 
+• Memory – (Controllers hw/sw) - external devices
+– Chunks of data
+– External devices have their own timing
+• DMA with interrupts
+– Disk is external!
+16
+System I/O (Chap 1, 12 SGG 10the)
+Central 
+brain
+17
+I/O Hardware (Cont.)
+• I/O Devices usually have registers where 
+device driver places commands, 
+addresses, and data
+– Data-in register, data-out register, status 
+register, control register
+– Typically 1-4 bytes, or FIFO buffer
+• Devices have addresses, used by 
+– Direct I/O instructions
+– Memory-mapped I/O
+• Device data and command registers mapped to 
+processor address space
+18
+I/O Transfer rates MB/sec
+19
+Polling vs Interrupt
+• Polling: IO initiated by software  (P&P, ch 8) 
+– CPU monitors readiness
+– Keeps checking a bit to see if it is time for an 
+IO operation, 
+– not efficient
+• Interrupts: IO is initiated by hardware (P&P 
+ch 10.2) 
+– CPU is informed when the external device is 
+ready for an IO
+– CPU does something else until interrupted
+20
+Interrupts
+• Polling is slow
+• Interrupts used in practice
+• CPU Interrupt-request line triggered by I/O 
+device
+– Checked by processor after each instruction
+• Interrupt handler receives interrupts
+– Maskable to ignore or delay some interrupts
+• Interrupt vector to dispatch interrupt to correct 
+handler
+– Context switch at start and end
+– Based on priority
+– Some nonmaskable
+– Interrupt chaining if more than one device at same 
+interrupt number
+21
+Interrupt-Driven I/O Cycle
+22
+Interrupts (Cont.)
+• Interrupt mechanism also used for 
+exceptions, which include
+– Terminate process, crash system due to 
+hardware error
+– Page fault executes when memory access 
+error
+– OS causes switch to another process
+– System call executes via trap to trigger 
+kernel to execute request
+23
+Direct Memory Access
+• for movement of a block of data 
+– To/from disk, network etc.
+• Requires DMA controller
+• Bypasses CPU to transfer data directly 
+between I/O device and memory 
+• OS writes DMA command block into memory 
+– Source and destination addresses
+– Read or write mode
+– Count of bytes
+– Writes location of command block to DMA controller
+– Bus mastering of DMA controller – grabs bus from CPU
+• Or Cycle stealing from CPU but still much more efficient
+– When done, interrupts to signal completion
+24
+Six Step Process to Perform DMA Transfer
+Interrupt 
+when 
+done
+Device driver: code
+Device controller: hw
+25
+Direct Memory Access Structure
+• high-speed I/O devices 
+• Device controller transfers 
+blocks of data from buffer 
+storage directly to main 
+memory without CPU 
+intervention
+• Only one interrupt is generated 
+per block
+26
+I/O Subsystem
+• One purpose of OS is to hide peculiarities 
+of hardware devices from the user
+• I/O subsystem responsible for
+– Memory management of I/O including 
+• buffering (storing data temporarily while it is being 
+transferred),
+• caching (storing parts of data in faster storage for 
+performance), 
+• spooling (the overlapping of output of one job with 
+input of other jobs) like printer queue
+– General device-driver interface
+– Drivers for specific hardware devices
+27
+Application I/O Interface
+• I/O system calls encapsulate device behaviors in generic 
+classes
+• Device-driver layer hides differences among I/O 
+controllers from kernel
+• New devices talking already-implemented protocols need 
+no extra work
+• Each OS has its own I/O subsystem structures and device 
+driver frameworks
+• Devices vary in many dimensions
+– Character-stream or block
+– Sequential or random-access
+– Synchronous or asynchronous (or both)
+– Sharable or dedicated
+– Speed of operation
+– read-write, read only, or write only
+28
+A Kernel I/O Structure
+29
+Storage
+30
+Storage Structure Memory
+for short
+• Main memory – only large storage media that the CPU can access directly
+– Random access Disk
+– Typically volatile (except for ROM) for short
+• Secondary storage – extension of main memory that provides large nonvolatile
+storage capacity 
+– Hard disks (HDD) – rigid platters covered with magnetic recording material 
+• Disk surface divided into tracks, which are subdivided into sectors
+• The disk controller – transfers between the device and the processor 
+– Solid-state disks (SSD) – faster than hard disks, lower power consumption
+• More expensive, but becoming more popular
+• Tertiary/removable storage
+– External disk, thumb drives, cloud backup etc.
+31
+Storage Hierarchy
+• Storage systems organized in hierarchy
+– Speed
+– Cost
+– Volatility
+• Caching – copying information into faster 
+storage system; main memory can be 
+viewed as a cache for secondary storage
+• Device Driver for each device controller to 
+manage I/O
+– Provides uniform interface between 
+controller and kernel
+32
+Storage-Device Hierarchy
+One or 
+the other
+33
+Performance of Various Levels of Storage
+Movement between levels of storage hierarchy can be explicit or implicit
+• Cache managed by hardware. Makes main memory appear much 
+faster.
+• Disks are several orders of magnitude slower.
+34
+Multilevel  Caches
+• Cache: between registers and main memory
+– Cache is faster and smaller than main memory
+– Makes main memory appear to be much faster, if the stuff is 
+found in the cache much of the time
+– Hardware managed because of speed requirements
+• Multilevel caches
+– L1: smallest and fastest of the three (about 4 cycles)
+– L2: bigger and slower than L1 (about 10 cycles)
+– L3: bigger and slower than L2  (about 50 cycles)
+– Main memory: bigger and slower than L3 (about 150 cycles)
+• You can mathematically show that multi-level caches 
+improve performance with usual high hit rates.
+35
+Concept: Caching
+• Important principle, performed at many levels in a 
+computer (in hardware, operating system, software)
+• Information in use copied from slower to faster storage 
+temporarily
+• Faster storage (cache) checked first to determine if 
+information is there
+– If it is, information used directly from the cache (fast)
+– If not, data copied to cache and used there Cache la 
+• Cache smaller than storage being cached Poudre?
+– Cache management important design problem
+– Cache size and replacement policy
+• Examples: “cache”, browser cache ..
+36
+Multiprocessors
+37
+Multiprocessors
+• Past systems used a single general-purpose processor
+– Most systems have special-purpose processors as well
+• Multiprocessors systems were once special, now are 
+common
+– Advantages include:
+1. Increased throughput
+2. Economy of scale
+3. Increased reliability – graceful degradation or fault tolerance
+– Two types:
+1. Asymmetric Multiprocessing – each processor is assigned a 
+specific task.
+2. Symmetric Multiprocessing – each processor performs all tasks
+38
+Symmetric Multiprocessing Architecture
+39
+Multiprocessor
+Multi-chip and multicore
+• Multi-chip: Systems containing all  chips
+– Chassis containing multiple separate systems
+• Multi-core
+40
+41
+Operating System Structure
+42
+Multiprogramming and multitasking
+• Multiprogramming needed for efficiency
+– Single user cannot keep CPU and I/O devices busy at all times
+– Multiprogramming organizes jobs (code and data) so CPU always has one 
+to execute
+– A subset of total jobs in system is kept in memory
+– One job selected and run via job scheduling
+– When it has to wait (for I/O for example), OS switches to another job
+• Timesharing (multitasking) is logical extension in which CPU switches jobs so 
+frequently that users can interact with each job while it is running, creating 
+interactive computing
+– Response time should be < 1 second
+– Each user has at least one program executing in memory process
+– If several jobs ready to run at the same time  CPU scheduling
+– If processes don’t fit in memory, swapping moves them in and out to run
+– Virtual memory allows execution of processes not completely in memory
+43
+Memory Layout for Multiprogrammed System
+44
+Operating-System Operations
+• “Interrupts” (hardware and software)
+– Hardware interrupt by one of the devices 
+– Software interrupt (exception or trap):
+• Software error (e.g., division by zero)
+• Request for operating system service
+• Other process problems like processes 
+modifying each other or the operating 
+system
+45
+Operating-System Operations (cont.)
+• Dual-mode operation allows OS to protect 
+itself and other system components
+called Supervisor mode
+in LC3
+– User mode and kernel mode 
+– Mode bit provided by hardware
+• Provides ability to distinguish when system is 
+running user code or kernel code
+• Some instructions designated as privileged, only 
+executable in kernel mode
+• System call changes mode to kernel, return from call 
+resets it to user
+• Increasingly CPUs support multi-mode 
+operations
+– i.e. virtual machine manager (VMM) mode for 
+guest VMs
+46
+Transition from User to Kernel Mode
+Example: time interrupts
+• Timer to prevent infinite loop / process hogging resources
+– Timer is set to interrupt the computer after some time period
+– Keep a counter that is decremented by the physical clock.
+– Operating system set the counter (privileged instruction)
+– When counter zero generate an interrupt
+– Set up before scheduling process to regain control or terminate 
+program that exceeds allotted time
+47
+Process Management
+• A process is a program in execution. It is a unit of work within the 
+system. Program is a passive entity, process is an active entity.
+• Process needs resources to accomplish its task
+– CPU, memory, I/O, files
+– Initialization data
+• Process termination requires reclaim of any reusable resources
+• Single-threaded process has one program counter specifying location 
+of next instruction to execute
+– Process executes instructions sequentially, one at a time, until completion
+• Multi-threaded process has one program counter per thread
+• Typically system has many processes, some user, some operating 
+system running concurrently on one or more CPUs
+– Concurrency by multiplexing the CPUs among the processes / threads
+48
+Process Management Activities
+The operating system is responsible for the following 
+activities in connection with process management:
+• Creating and deleting both user and system processes
+• Suspending and resuming processes
+• Providing mechanisms for process synchronization
+• Providing mechanisms for process communication
+• Providing mechanisms for deadlock handling
+49

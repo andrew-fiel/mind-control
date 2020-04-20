@@ -1,0 +1,499 @@
+CS370 Operating Systems
+Colorado State University
+Yashwant K Malaiya
+Spring 2020 L10
+Synchronization
+Slides based on 
+• Text by Silberschatz, Galvin, Gagne
+• Various sources
+1 1
+FAQ
+• Shortest remaining time first (Preemptive SJF)
+– Need to track the remaining time for all processes
+• Round Robin
+– Need to track the position of the processes in the Ready 
+Queue
+– Also need to track the remaining time needed
+– Illustration on youtube
+– Animation CPU Scheduling Algorithm Visualization
+• Time quantum- How to decide? 
+– Rule of thumb: 80% of CPU bursts should be shorter than q
+Disclaimer: I have not verified the accuracy of the on-line sources.
+2
+Round Robin Scheduling   (Read it yourself)
+Time 1: P2 arrives, gets in RQ.
+Time 2: P2 starts.
+P3 arrives, gets in RQ, P1 gets in RQ.  RQ={P1, P3}
+Time 3:P2 executing.
+P4 arrives, gets in RQ, RQ={P4, P1, P3}
+Time 4: P3 starts. Arrival Burst 
+PID
+P5 arrives, gets in RQ, P2 gets in RQ. RQ={P2, P5, P4,P1} Time Time
+Time 5: no change P1 0 4
+Time 6: P1 starts.
+P6 arrives, gets in RQ, P3 done. RQ={P6, P2, P5, P4} P2 1 5
+Time 8: P4 starts P3 2 2
+RQ={P6, P2, P5}
+P4 3 1
+Time 9: P4 done, P5 starts
+RQ={P6, P2} P5 4 6
+T1me 11: P2 starts.
+P6 6 3
+RQ={P5, P6} …..
+3 3
+FAQ
+• Thread scheduling similar to process scheduling
+– process-contention scope (PCS) 
+– system-contention scope (SCS) 
+• Non-uniform memory access: Multiple processor system with  
+some memory closer to each processor 
+4
+Schedulers
+• Scheduling schemes have continued to evolve with 
+continuing research. A comparison.
+• Multilevel Feedback Queue Details at ARPACI-DUSSEAU
+• Linux Completely fair scheduler (Con Kolivas, Anaesthetist): 
+– Variable time-slice based on number and priority of the tasks 
+in the queue.
+• Maximum execution time based on waiting processes (Q/n). 
+– Processes kept in a red-black binary tree with scheduling 
+complexity of O(log N)
+– Process with lowest weighted spent execution (virtual run 
+time) time is picked next. Weighted by priority (“niceness”). 
+5
+Algorithm Evaluation
+• How to select CPU-scheduling algorithm for an OS?
+• Determine criteria, then evaluate algorithms
+• Deterministic modeling
+– Type of analytic evaluation
+– Takes a particular predetermined workload and defines the 
+performance of each algorithm  for that workload
+• Consider 5 processes arriving at time 0:
+6
+Deterministic Evaluation
+• For each algorithm, calculate minimum average waiting time
+• Simple and fast, but requires exact numbers for input, applies only 
+to those inputs
+– FCS is 28ms:
+– Non-preemptive SFJ is 13ms:
+– RR is 23ms:
+7
+Probabilitistic Models
+• Assume that the arrival of processes, and CPU 
+and I/O bursts are random
+– Repeat deterministic evaluation for many random 
+cases and then average
+• Approaches:
+– Analytical: Queuing models 
+– Simulation: simulate using realistic assumptions
+8
+Queueing Models
+• Describes the arrival of processes, and CPU 
+and I/O bursts probabilistically
+– Commonly exponential, and described by mean
+– Computes average throughput, utilization, waiting 
+time, etc
+• Computer system described as network of 
+servers, each with queue of waiting 
+processes
+– Knowing arrival rates and service rates
+– Computes utilization, average queue length, 
+average wait time, etc
+9
+Little’s Formula for av Queue Length 
+• n = average queue length
+• W = average waiting time in queue
+• λ = average arrival rate into queue
+• Little’s law – in steady state, processes 
+leaving queue must equal processes arriving, 
+thus:
+n = λ x W
+– Valid for any scheduling algorithm and arrival 
+distribution
+• Example: average 7 processes arrive per sec, 
+average wait time is 2 sec, then queue length 
+is n = λ x W = 7x2 = 14.
+Each process takes 1/ λ time to move one position.
+Beginning to end delay W = n(1/λ). Hence Little’s law
+10
+Simulations
+• Queueing models limited
+• Simulations more versatile
+– Programmed model of computer system
+– Clock is a variable
+– Gather statistics  indicating algorithm performance
+– Data to drive simulation gathered via
+• Random number generator according to probabilities
+• Distributions defined mathematically or empirically
+• Trace tapes record sequences of real events in real systems
+– Illustration
+11
+Evaluation of CPU Schedulers by Simulation
+12
+Actual Implementation
+ Even simulations have limited accuracy
+ Just implement new scheduler and test in real systems
+ High cost, high risk
+ Environments vary
+ However note that 
+ Most flexible schedulers can be modified per-site or per-
+system
+ Or may use APIs to modify priorities
+13
+CS370 Operating Systems
+Colorado State University
+Yashwant K Malaiya
+Synchronization
+Slides based on 
+• Text by Silberschatz, Galvin, Gagne
+• Various sources
+14 14
+Process Synchronization: Objectives
+ Concept of process synchronization.
+ The critical-section problem, whose solutions 
+can be used to ensure the consistency of shared 
+data
+ Software and hardware solutions of the critical-
+section problem
+ Classical process-synchronization problems
+ Tools that are used to solve process 
+synchronization problems
+15 15
+Process Synchronization
+EW Dijkstra Go To Statement Considered Harmful
+16
+Too Much Milk Example
+Person A Person B
+12:30 Look in fridge.  Out of milk.
+12:35 Leave for store. Look in fridge.  Out of milk.
+12:40 Arrive at store. Leave for store
+12:45 Buy milk. Arrive at store.
+12:50 Arrive home, put milk away. Buy milk
+12:55 Arrive home, put milk away.
+Oh no!
+17
+Background
+• Processes can execute concurrently
+– May be interrupted at any time, partially completing 
+execution
+• Concurrent access to shared data may result in data 
+inconsistency
+• Maintaining data consistency requires mechanisms to 
+ensure the orderly execution of cooperating processes
+• Illustration: we wanted to provide a solution to the 
+consumer-producer problem that fills all the buffers. 
+– have an integer counter that keeps track of the number of 
+full buffers.  
+– Initially, counter is set to 0. 
+– It is incremented by the producer after it produces a new 
+buffer 
+– decremented by the consumer after it consumes a buffer.
+Will it work without any problems?
+18
+Consumer-producer problem 
+Producer Consumer
+while (true) { while (true) {
+/* produce an item*/ while (counter == 0); 
+while (counter == BUFFER_SIZE) ; /* do nothing */ 
+/* do nothing */ next_consumed = buffer[out]; 
+buffer[in] = next_produced; out = (out + 1) % BUFFER_SIZ
+in = (in + 1) % BUFFER_SIZE; counter--;
+counter++; /* consume the item in 
+} next consumed */ 
+} 
+They run “concurrently” (or in parallel), and are subject to context switches 
+at unpredictable times. 
+In, out: indices of empty and filled items in the buffer.
+19 19
+Race Condition
+counter++ could be compiled as counter-- could be compiled as
+register1 = counter register2 = counter
+register1 = register1 + 1 register2 = register2 - 1
+counter = register1 counter = register2
+They run concurrently, and are subject to context switches at unpredictable times. 
+Consider this execution interleaving with “count = 5” initially:
+S0: producer execute register1 = counter {register1 = 5}
+S1: producer execute register1 = register1 + 1   {register1 = 6}
+S2: consumer execute register2 = counter        {register2 = 5} 
+S3: consumer execute register2 = register2 – 1  {register2 = 4} 
+S4: producer execute counter = register1         {counter = 6 } 
+S5: consumer execute counter = register2        {counter = 4}
+Overwrites!
+20
+Critical Section Problem
+We saw race condition between counter ++ and counter –
+Solution to the “race condition” problem: critical section
+• Consider system of n processes {p0, p1, … pn-1}
+• Each process has critical section segment of code
+– Process may be changing common variables, updating table, writing 
+file, etc
+– When one process in critical section, no other may be in its critical 
+section
+• Critical section problem is to design protocol to solve this
+• Each process must ask permission to enter critical section in 
+entry section, may follow critical section with exit section, 
+then remainder section follows.
+Race condition: when outcome depends on timing/order that is not predictable
+21
+Process Synchronization: Outline
+ Critical-section problem to ensure the consistency of 
+shared data
+ Software and hardware solutions of the critical-section 
+problem
+ Peterson’s solution
+ Atomic instructions
+ Mutex locks and semaphores
+ Classical process-synchronization problems
+ Bounded buffer, Readers Writers, Dining Philosophers
+ Another approach: Monitors
+22
+General structure: Critical section
+Request permission 
+do { 
+to enter
+entry section
+critical section 
+exit section
+remainder section Housekeeping to let 
+} while (true); other processes to 
+enter
+23
+Solution to Critical-Section Problem
+A good solution to the critical-section problem should have these 
+attributes
+1. Mutual Exclusion - If process Pi is executing in its critical
+section, then no other processes can be executing in their
+critical sections
+2. Progress - If no process is executing in its critical section and
+there exist some processes that wish to enter their critical
+section, then the selection of the processes that will enter the
+critical section next cannot be postponed indefinitely
+3. Bounded Waiting - A bound must exist on the number of
+times that other processes are allowed to enter their critical
+sections after a process has made a request to enter its
+critical section and before that request is granted
+ Assume that each process executes at a nonzero speed 
+ No assumption concerning relative speed of the n processes
+25
+Critical-Section Handling in OS 
+Two approaches depending on if kernel is 
+preemptive or non-preemptive 
+– Preemptive – allows preemption of process 
+when running in kernel mode
+– Non-preemptive – runs until exits kernel mode, 
+blocks, or voluntarily yields CPU
+• Essentially free of race conditions in kernel mode
+26
+Peterson’s Solution
+• Good algorithmic  description of solving the problem
+• Two process solution only
+• Assume that the load and store machine-language 
+instructions are atomic; that is, cannot be interrupted
+• The two processes share two variables:
+– int turn; 
+– Boolean flag[2]
+– The variable turn indicates whose turn it is to enter the 
+critical section
+– The flag array is used to indicate if a process is ready to 
+enter the critical section. flag[i] = true implies that 
+process Pi is ready to enter!
+27
+Algorithm for Process Pi
+For process  Pi, 
+do { Being 
+Pj runs the same code 
+nice! concurrently
+flag[i] = true; 
+turn = j; 
+while (flag[j] && turn = = j);  /*Wait*/
+critical section
+flag[i] = false; 
+remainder section 
+} while (true); 
+• The variable turn indicates whose turn it is to enter the critical 
+section
+• The flag array is used to indicate if a process is ready to enter the 
+critical section. flag[i] = true implies that process Pi is ready!
+• Note: Entry section- Critical section-Exist section
+• These algorithms assume 2 or more processes are trying to get in the 
+critical section.
+28
+Peterson’s Solution (Cont.)
+Provable that the three  CS requirement are met:
+1.   Mutual exclusion is preserved
+Pi enters CS only if:
+either flag[j] = false or turn = i
+2.   Progress requirement is satisfied
+3.   Bounded-waiting requirement is met. 
+A process waits only one turn.
+Detailed proof in the text.
+Note: there exists a generalization of Peterson’s solution for more than 2 processes, but bounded waiting is not 
+assured.
+29
+Synchronization: Hardware Support
+• Many systems provide hardware support for 
+implementing the critical section code.
+• All solutions below based on idea of locking
+– Protecting critical regions via locks
+• Modern machines provide special atomic 
+hardware instructions
+• Atomic = non-interruptible
+– test memory word and set value
+– swap contents of two memory words
+30
+Solution 1:  using test_and_set()
+• Shared Boolean variable lock, initialized to FALSE
+• Solution:
+do {
+while (test_and_set(&lock)) ; /* do nothing */
+To break out:
+Return value of 
+/* critical section */ TestAndSet should be 
+…..
+FALSE
+lock = false; 
+/* remainder section */ 
+…  ..
+} while (true); test_and_set(&lock) returns the lock
+value and then sets it to True.
+Lock TRUE: locked, Lock FALSE: not locked.
+If two TestAndSet() are attempted simultaneously, they
+will be executed sequentially in some arbitrary order
+31
+Solution 2: Swap: Hardware implementation
+Remember this C code? 
+void Swap(boolean *a, boolean *b ) { 
+boolean temp = *a; 
+*a = *b; 
+*b = temp; 
+}
+32
+Using Swap (concurrently executed by both)
+do { Lock is a SHARED variable.  
+key = TRUE; Key is a variable local to the process. 
+while (key == TRUE) { 
+Swap(&lock, &key)       Lock == false when no process is in 
+} critical section.
+Cannot enter critical section UNLESS 
+critical section lock == FALSE by other process
+lock = FALSE;
+If two Swap() are executed 
+simultaneously, they will be executed 
+remainder section
+sequentially in some arbitrary order
+} while (TRUE); 
+33
+Swap()
+Process 0 Lock Process 1
+Key = TRUE
+Swap (  )  Lock = FALSE Key = TRUE
+Key ==FALSE, enter Swap (  )
+Key == TRUE, wait
+Critical section Locked by Process 0 Lock = TRUE Busy waiting
+Lock  = FALSE
+Swap (  ),  Key ==False
+Locked by Process 1 Critical section
+Lock  = FALSE
+Note: I created this to visualize the mechanism. It is not in the book. - Yashwant
+34
+Bounded-waiting Mutual Exclusion with test_and_set
+For process i: 
+Shared Data structures initialized to FALSE 
+do { • boolean waiting[n]; Pr n wants to enter
+waiting[i] = true;
+• boolean lock; 
+key = true;
+while (waiting[i] && key) 
+key = test_and_set(&lock); The entry section for process i : 
+waiting[i] = false; • First process to execute TestAndSet will find key == 
+false ; ENTER critical section, 
+/* critical section */ 
+• EVERYONE else must wait 
+j = (i + 1) % n; 
+while ((j != i) && !waiting[j]) 
+The exit section for process i: 
+j = (j + 1) % n; 
+Attempts to finding a suitable waiting process j (while 
+if (j == i) 
+loop) and enable it, 
+lock = false; 
+or if there is no suitable process, make lock FALSE.
+else 
+waiting[j] = false; 
+/* remainder section */ 
+} while (true); 
+35
+Bounded-waiting Mutual Exclusion with test_and_set
+The previous algorithm satisfies the three requirements
+• Mutual Exclusion:  The first process to execute TestAndSet(lock) 
+when lock is false, will set lock to true so no other process can 
+enter the CS.
+• Progress: When a process i exits the CS, it either sets lock to 
+false, or waiting[i] to false (allowing j to get in) , allowing the 
+next process to proceed.
+• Bounded Waiting: When a process exits the CS, it examines all 
+the other processes in the waiting array in a circular order.  Any 
+process waiting for CS will have to wait at most n-1 turns
+36
+Mutex Locks
+ Previous solutions are complicated and generally 
+inaccessible to application programmers
+ OS designers build software tools to solve critical 
+section problem
+ Simplest is mutex lock
+ Protect a critical section  by first acquire() a lock 
+then release() the lock
+ Boolean variable indicating if lock is available or not
+ Calls to acquire() and release()must be atomic
+ Usually implemented via hardware atomic instructions
+ But this solution requires busy waiting
+ This lock therefore called a spinlock
+37
+acquire() and release()
+acquire() { release() { 
+while (!available) available = true; 
+; /* busy wait */ } 
+•Usage
+do { 
+acquire lock
+critical section
+release lock 
+remainder section 
+} while (true); 
+38
+acquire() and release()
+Process 0 Lock Process 1
+Start acquire, get lock
+Start acquire
+Critical section Locked by Process 0 Busy waiting
+Release lock
+Gets lock
+Locked by Process 1 Critical section
+Release lock
+39
+acquire() and release()
+Process 0 Lock Process 1
+.. open Attempt to 
+acquire lock
+.. closed Acquires lock
+Attempt to closed Critical 
+acquire lock section
+Attempt to closed Critical 
+acquire lock section
+Attempt to open Release lock
+acquire lock
+Acquires lock closed ..
+Critical closed ..
+section
+40
+How are locks supported by hardware?
+• Atomic read-modify-write
+• Atomic instruction in x86
+– LOCK instruction prefix, which applies to an instruction does a 
+read-modify-write on memory (INC, XCHG, CMPXCHG etc)
+– Ex: lock cmpxchg <dest>, <source>
+• In RISK processors? Instruction-pairs
+– LL (Load Linked Word), SC (Store Conditional Word) instructions in MIPS
+– LDREX, STREX in ARM
+– Creates an atomic sequence
+41

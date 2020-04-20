@@ -1,0 +1,439 @@
+CS370 Operating Systems
+Colorado State University
+Yashwant K Malaiya
+Spring 2020 Lecture 9 
+CPU Scheduling
+Slides based on 
+• Text by Silberschatz, Galvin, Gagne
+• Various sources
+1 1
+Questions from last time
+• Scheduling time unit: often millisec (1/1000 of a sec)
+• Estimation & probabilistic approaches in computing 
+optimal algorithms, cache, virtual memory, data centers etc. Based on field/recent data.
+• Prediction of next burst
+– Based on actual recent duration and predicted value (which is based on past actual 
+values)
+– More recent data points get more weight (based on alpha). 
+– Initial prediction? Prior field data
+• Shortest Job First (SJF) vs Preemptive SJF
+– SJF is not preemptive
+– Preemptive SJF (also termed Shortest remaining time first)
+– Priority scheduling can also be preemptive or non-preemptive
+2
+Scheduling Criteria
+• CPU utilization – keep the CPU as busy as 
+possible: Maximize
+• Throughput – # of processes that complete their 
+entire execution per time unit: Maximize
+• Turnaround time –time to execute a process 
+from submission to completion:  Minimize
+• Waiting time – total amount of time a process has 
+been waiting in the ready queue: Minimize
+• Response time –time it takes from when a 
+request was submitted until the first response is 
+produced (assumption: beginning of execution), not final output  
+(for time-sharing environment): Minimize
+3
+First- Come, First-Served (FCFS) Scheduling
+Process Burst Time
+P1 24
+P2 3
+P3 3
+• Suppose that the processes arrive in the order: P1 , P2 , P3  but 
+almost the same time 0.
+The Gantt Chart for the schedule is:
+P P P
+1 2 3
+0 24 27 30
+• Waiting time for P1 = 0; P2 = 24; P3 = 27
+• Average waiting time:  (0 + 24 + 27)/3 = 17
+• Throughput: 3/30 = 0.1 per unit
+• Turnaround time for P1, P2, P3 = 24, 27, 30
+• Response time for P1, P2, P3 = 0, 24, 27 assuming ..
+4
+Example: FCFS (from iClicker)
+Process Arrival Burst Begins Completion Turnaround Waiting 
+ID Time time time time time
+P1 0 2 0 2 2-0=2 2-2=0
+P2 1 3 2 5 5-1=4 4-3=1
+P3 2 5 5 10 10-2=8 8-5=3
+P4 3 4 10 14 14-3=11 11-4=7
+P5 4 6 14 20 20-4=16 16-6=10
+Av 41/5=8.2 21/5=4.2
+5 5
+Example of SJF
+ProcessArriva l TimeBurst Time
+P1 0.0 6
+P2 2.0 8
+P3 4.0 7
+P4 5.0 3
+• All arrive at time 0.
+• SJF scheduling chart
+P P P P
+4 1 3 2
+0 3 9 16 24
+• Average waiting time for P1,P2,P3,P4 = (3 + 16 + 9 + 0) / 4 = 7
+6
+Shortest-remaining-time-first (preemptive SJF)
+• Preemptive version called shortest-remaining-time-first
+• Now we add the concepts of varying arrival times and 
+preemption to the analysis 0 P1
+ProcessA arri Arrival TimeT Burst Time 1 P2 preempts P1
+P1 0 8 2 P3 doesn’t  P2
+P2 1 4 (will preempt because 4<7) 3 ..
+P3 2 9 (will not preempt)
+4 ..
+P4 3 5
+• Preemptive SJF Gantt Chart  5 RT: P1=7, P3:9, P4:5. Thus ..
+P P P P P
+1 2 4 1 3
+0 1 5 10 17 26
+• Average waiting time for P1,P2,P3,P4
+= [(10-1)+(1-1)+(17-2)+(5-3)]/4 = 26/4 = 6.5 msec
+7
+Prediction of the Length of the Next CPU Burst
+Blue points: guess
+Black points: actual
+α = 0.5
+Ex:
+0.5x6 +0.5x10 = 8
+8
+Example of Priority Scheduling
+ProcessA arri Burst TimeT Priority
+P1 10 3
+P2 1 1 (highest)
+P3 2 4
+P4 1 5
+P5 5 2
+• Arrived at time 0 in order P1,P2, P3, P4,P5 (which does not matter)
+• Priority scheduling Gantt Chart
+• Average waiting time  for P1, .. P5: (6+0+16+18+1)/5 = 8.2 msec
+9
+Example of RR with Time Quantum = 4
+Process Burst Time
+P1 24
+P2 3
+P3 3
+• Arrive a time 0 in order P1, P2, P3: The Gantt chart is: 
+P P P P P P P P
+1 2 3 1 1 1 1 1
+0 4 7 10 14 18 22 26 30
+• Waiting times for P1,P2,P3: 0+(10-4) =6, 4, 7, average 17/3 = 
+5.66 units
+• Typically, higher average turnaround than SJF, but better 
+response
+• q should be large compared to context switch time
+• q usually 10ms to 100ms, context switch < 10 µsec
+Response time: Arrival to beginning of execution
+Turnaround time: Arrival to finish of execution
+10
+Turnaround Time Varies With The Time Quantum
+Rule of thumb: 80% of CPU bursts should be 
+shorter than q
+Illustration
+q=7. All processes arrive at about the same time.
+Turnaround time for P1,P2,P3,P4: 
+6,9,10,17  av = 10.5
+Similarly for q =1, ..6
+Response time: Arrival to beginning of execution
+Turnaround time: Arrival to finish of execution
+11
+Multilevel Queue
+• Ready queue is partitioned into separate queues, 
+e.g.:
+– foreground (interactive)
+– background (batch)
+• Process permanently in a given queue
+• Each queue has its own scheduling algorithm, e.g.:
+– foreground – RR
+– background – FCFS
+• Scheduling must be done between the queues:
+– Fixed priority scheduling; (i.e., serve all from foreground 
+then from background).  Possibility of starvation.  Or
+– Time slice – each queue gets a certain amount of CPU 
+time which it can schedule amongst its processes; i.e.,     
+80% to foreground in RR, 20% to background in FCFS 
+12
+Multilevel Queue Scheduling
+Real-time processes may have the highest priority.
+13
+Multilevel Feedback Queue
+• A process can move between the various queues; 
+aging can be implemented this way
+• Multilevel-feedback-queue scheduler defined by 
+the following parameters:
+– number of queues
+– scheduling algorithms for each queue
+– method used to determine when to upgrade a process
+– method used to determine when to demote a process
+– method used to determine which queue a process will 
+enter when that process needs service
+Inventor Corbato won the Touring award!
+14
+Example of Multilevel Feedback Queue
+• Three queues: 
+– Q0 – RR with time quantum 8 milliseconds
+– Q1 – RR time quantum 16 milliseconds
+– Q2 – FCFS (no time quantum limit)
+• Scheduling
+– A new job enters queue Q0 which is served
+FCFS
+• When it gains CPU, job receives 8 
+milliseconds
+• If it does not finish in 8 milliseconds, 
+job is moved to queue Q1
+– At Q1 job is again served FCFS and receives 
+16 additional milliseconds
+• If it still does not complete, it is 
+preempted and moved to queue Q2
+Upgrading may be based on aging. Periodically processes may be moved to the top level.
+Variations of the scheme were used in earlier versions of Linux.  
+15
+Thread Scheduling
+• Thread scheduling is similar
+• Distinction between user-level and kernel-level threads
+• When threads supported, threads scheduled, not processes
+Scheduling competition
+• Many-to-one and many-to-many models, thread library schedules 
+user-level threads to run on LWP
+– Known as process-contention scope (PCS) since scheduling competition is 
+within the process
+– Typically done via priority set by programmer
+• Kernel thread scheduled onto available CPU is system-contention 
+scope (SCS) – competition among all threads in system
+• Pthread API allows both, but Linux and Mac OSX allows only SCS.
+LWP layer between kernel threads and user threads in some older OSs
+16
+Multiple-Processor Scheduling
+• CPU scheduling more complex when multiple CPUs are 
+available. 
+• Assume Homogeneous processors within a 
+multiprocessor
+• Asymmetric multiprocessing – individual processors can 
+be dedicated to specific tasks at design time
+• Symmetric multiprocessing (SMP) – each processor is 
+self-scheduling, 
+– all processes in common ready queue, or
+– each has its own private queue of ready processes
+• Currently, most common
+• Processor affinity – process has affinity for processor on 
+which it is currently running because of info in cache
+– soft affinity: try but no guarantee
+– hard affinity  can specify processor sets
+17
+NUMA and CPU Scheduling
+Note that memory-placement algorithms can also consider affinity
+Non-uniform memory access (NUMA), in which a CPU has 
+faster access to some parts of main memory. 
+18
+Multiple-Processor Scheduling – Load Balancing
+• If SMP, need to keep all CPUs loaded for 
+efficiency
+• Load balancing attempts to keep workload 
+evenly distributed 
+– Push migration – periodic task checks load on 
+each processor, and if found pushes task from 
+overloaded CPU to other CPUs
+– Pull migration – idle processors pulls waiting 
+task from busy processor
+– Combination of push/pull may be used.
+19
+Multicore Processors
+• Recent trend to place multiple processor 
+cores on same physical chip
+• Faster and consumes less power
+• Multiple threads per core
+– Concurrent
+– Parallel: with hyper-threading hardware
+20
+Real-Time CPU Scheduling
+• Can present obvious challenges
+– Soft real-time systems – no guarantee as to when critical 
+real-time process will be scheduled
+– Hard real-time systems – task must be serviced by its 
+deadline
+• For real-time scheduling, scheduler must support 
+preemptive, priority-based scheduling
+– But only guarantees soft real-time
+• For hard real-time must also provide ability to 
+meet deadlines
+– periodic ones require CPU at constant intervals
+22
+Virtualization and Scheduling
+• Virtualization software schedules multiple 
+guests onto CPU(s)
+• Each guest doing its own scheduling
+– Not knowing it doesn’t own the CPUs
+– Can effect time-of-day clocks in guests
+• VMM has its own scheduler
+• Various approaches have been used
+– Workload aware, Guest OS cooperation, etc.
+23
+Operating System Examples
+• Solaris scheduling: 6 classes, Inverse relationship 
+between priorities and time quantum
+• Windows XP scheduling: 32 priority levels (real-
+time, not real-time levels)
+• Linux scheduling schemes have continued to 
+evolve.
+– Linux Version 2.5: Two multilevel priority (“nice values”) 
+queue sets  
+– Linux Completely fair scheduler (CFS, 2007): 
+24
+Completely fair scheduler Linux 2.6.23 
+Goal: fairness in dividing processor time to tasks
+• Balanced (red-black) tree to implement a ready queue; 
+– Efficient. O(log n) insert or delete time
+– Queue ordered in terms of “virtual run time”
+• execution time on CPU added to value
+– smallest value picked for using CPU
+– small values: tasks have received less time on CPU
+– I/O bound tasks (shorter CPU bursts) will have smaller values
+• Priorities (niceness) cause different decays of values: 
+higher priority processes get to run for longer time
+– virtual run time is the weighted run-time
+• Maximum execution time based on number of waiting 
+processes (Q/n)
+– Fewer processes waiting, they get more time each
+25
+Schedulers
+• Scheduling schemes have continued to evolve with 
+continuing research. A comparison.
+• Multilevel Feedback Queue Details at ARPACI-DUSSEAU
+• Linux Completely fair scheduler (Con Kolivas, Anaesthetist): 
+– Variable time-slice based on number and priority of the tasks 
+in the queue.
+• Maximum execution time based on waiting processes (Q/n). 
+– Processes kept in a red-black binary tree with scheduling 
+complexity of O(log N)
+– Process with lowest weighted spent execution (virtual run 
+time) time is picked next. Weighted by priority (“niceness”). 
+27
+Algorithm Evaluation
+• How to select CPU-scheduling algorithm for an OS?
+• Determine criteria, then evaluate algorithms
+• Deterministic modeling
+– Type of analytic evaluation
+– Takes a particular predetermined workload and defines the 
+performance of each algorithm  for that workload
+• Consider 5 processes arriving at time 0:
+28
+Deterministic Evaluation
+• For each algorithm, calculate minimum average waiting time
+• Simple and fast, but requires exact numbers for input, applies only 
+to those inputs
+– FCS is 28ms:
+– Non-preemptive SFJ is 13ms:
+– RR is 23ms:
+29
+Probabilitistic Models
+• Assume that the arrival of processes, and CPU 
+and I/O bursts are random
+– Repeat deterministic evaluation for many random 
+cases and then average
+• Approaches:
+– Analytical: Queuing models 
+– Simulation: simulate using realistic assumptions
+30
+Queueing Models
+• Describes the arrival of processes, and CPU 
+and I/O bursts probabilistically
+– Commonly exponential, and described by mean
+– Computes average throughput, utilization, waiting 
+time, etc
+• Computer system described as network of 
+servers, each with queue of waiting 
+processes
+– Knowing arrival rates and service rates
+– Computes utilization, average queue length, 
+average wait time, etc
+31
+Little’s Formula for av Queue Length 
+• n = average queue length
+• W = average waiting time in queue
+• λ = average arrival rate into queue
+• Little’s law – in steady state, processes 
+leaving queue must equal processes arriving, 
+thus:
+n = λ x W
+– Valid for any scheduling algorithm and arrival 
+distribution
+• Example: average 7 processes arrive per sec, 
+and 14 processes in queue, then average 
+wait time per process W= n/λ = 14/7= 2 sec
+Each process takes 1/ λ time to move one position.
+Beginning to end delay W = n(1/λ)
+32
+Simulations
+• Queueing models limited
+• Simulations more versatile
+– Programmed model of computer system
+– Clock is a variable
+– Gather statistics  indicating algorithm performance
+– Data to drive simulation gathered via
+• Random number generator according to probabilities
+• Distributions defined mathematically or empirically
+• Trace tapes record sequences of real events in real systems
+33
+Evaluation of CPU Schedulers by Simulation
+34
+Actual Implementation
+Even simulations have limited accuracy
+Just implement new scheduler and test in real systems
+High cost, high risk
+Environments vary
+Most flexible schedulers can be modified per-site or per-system
+Or APIs to modify priorities
+But again environments vary
+35
+CS370 Operating Systems
+Colorado State University
+Yashwant K Malaiya
+Synchronization
+Slides based on 
+• Text by Silberschatz, Galvin, Gagne
+• Various sources
+36 36
+Process Synchronization: Objectives
+Concept of process synchronization.
+The critical-section problem, whose solutions 
+can be used to ensure the consistency of shared 
+data
+Software and hardware solutions of the critical-
+section problem
+Classical process-synchronization problems
+Tools that are used to solve process 
+synchronization problems
+37 37
+Process Synchronization
+EW Dijkstra Go To Statement Considered Harmful
+38
+Too Much Milk Example
+Person A Person B
+12:30 Look in fridge.  Out of milk.
+12:35 Leave for store. Look in fridge.  Out of milk.
+12:40 Arrive at store. Leave for store
+12:45 Buy milk. Arrive at store.
+12:50 Arrive home, put milk away. Buy milk
+12:55 Arrive home, put milk away.
+Oh no!
+39
+Background
+• Processes can execute concurrently
+– May be interrupted at any time, partially completing 
+execution
+• Concurrent access to shared data may result in data 
+inconsistency
+• Maintaining data consistency requires mechanisms to 
+ensure the orderly execution of cooperating processes
+• Illustration: we wanted to provide a solution to the 
+consumer-producer problem that fills all the buffers. 
+– have an integer counter that keeps track of the number of 
+full buffers.  
+– Initially, counter is set to 0. 
+– It is incremented by the producer after it produces a new 
+buffer 
+– decremented by the consumer after it consumes a buffer.
+Will it work without any problems?
+40

@@ -1,0 +1,582 @@
+CS370 Operating Systems
+Colorado State University
+Yashwant K Malaiya
+Spring 2020 L11
+Synchronization
+Slides based on 
+• Text by Silberschatz, Galvin, Gagne
+• Various sources
+1 1
+FAQ
+• Round Robin scheduling: role of Ready Queue
+– Scheduled in the order in which they are in RQ, but preempted after time q.
+– See appendix slide.
+• Why are critical sections needed?
+– Mutual exclusion: Correctness, avoiding data inconsistency.
+• Two processes do not share any resources, do 
+they need critical sections?
+• How do we know what data is shared?
+• Can’t critical sections cause starvation?
+– Not if they satisfy ..
+• What if a process gets stuck in a critical section?
+2
+FAQ
+• Peterson’s solution
+– Two processes, i and j, may want to enter their 
+critical sections around the same time. 
+– Why does Pi do this:
+turn = j; 
+– You can go ahead if you want to (if not, I will go 
+ahead)
+• Synchronization examples: 
+– remember multiple processes are interacting, even 
+though code of just one is usually given.
+3
+Peterson’s Solution
+• Good algorithmic  description of solving the problem
+• Two process solution only
+• Assume that the load and store machine-language 
+instructions are atomic; that is, cannot be interrupted
+• The two processes share two variables:
+– int turn; 
+– Boolean flag[2]
+– The variable turn indicates whose turn it is to enter the critical 
+section
+– The flag array is used to indicate if a process is ready to enter 
+the critical section. flag[i] = true implies that process Pi is 
+ready to enter!
+4
+Algorithm for Process Pi
+For process  Pi, 
+do { Being Pj runs the same code 
+concurrently
+flag[i] = true; nice!
+turn = j; 
+while (flag[j] && turn = = j);  /*Wait*/
+critical section
+flag[i] = false; 
+remainder section 
+} while (true); 
+• The variable turn indicates whose turn it is to enter the critical section
+• The flag array is used to indicate if a process is ready to enter the critical 
+section. flag[i] = true implies that process Pi is ready!
+Pi will enter critical section if Pj
+does not want to, or Pj has asked 
+Pi to go ahead.
+5
+Desirable attributes of a Critical-Section
+1. Mutual Exclusion 
+2. Progress - If no process is executing in its 
+critical section and there are some processes 
+that wish to enter their critical section, then 
+the selection of the processes that will enter 
+the critical section next cannot be postponed 
+indefinitely
+3.  Bounded Waiting - A bound must exist on the 
+number of times that other processes are 
+allowed to enter their critical sections after a 
+process has made a request to enter its critical 
+section and before that request is granted
+6
+Peterson’s Solution (Cont.)
+Provable that the three  CS requirement are met:
+1.   Mutual exclusion is preserved
+Pi enters CS only if:
+either flag[j] = false or turn = i
+2.   Progress requirement is satisfied
+3.   Bounded-waiting requirement is met. A process 
+waits only one turn.
+Detailed proof in the text.
+• Note: there exists a generalization of Peterson’s solution for more than 2 processes, but bounded 
+waiting is not assured.
+• Will not work in modern processors which allow out of order execution
+7
+Synchronization: Hardware Support
+• Many systems provide hardware support for 
+implementing the critical section code.
+• All solutions below based on idea of locking
+– Protecting critical regions via locks
+• Modern machines provide special atomic 
+hardware instructions
+• Atomic = non-interruptible
+– test memory word and set value
+– swap contents of two memory words
+8
+Solution 1:  using test_and_set()
+To break out:
+• Shared Boolean variable lock, initialized to FALSE Return value of 
+• Solution: TestAndSet should be 
+FALSE
+do {
+while (test_and_set(&lock)) ; /* do nothing */
+/* critical section */ 
+…..
+lock = false; 
+/* remainder section */ 
+…  ..
+} while (true); test_and_set(&lock) returns the lock
+value and then sets it to True.
+Lock TRUE: locked, Lock FALSE: not locked.
+If two TestAndSet() are attempted simultaneously, they
+will be executed sequentially in some arbitrary order
+9
+Using Swap (concurrently executed by both)
+do { Lock == false when no process is in 
+key = TRUE; critical section.
+while (key == TRUE) { 
+Swap(&lock, &key)       Cannot enter critical section UNLESS 
+} lock == FALSE by other process
+Lock is a SHARED variable.  
+critical section Key is a variable local to the process. 
+lock = FALSE; If two Swap() are executed 
+simultaneously, they will be executed 
+sequentially in some arbitrary order 
+remainder section
+} while (TRUE); 
+10
+Swap()
+Process 0 Lock Process 1
+Key = TRUE
+Swap (  )  Lock = FALSE Key = TRUE
+Key ==FALSE, enter Swap (  )
+Key == TRUE, wait
+Critical section Locked by Process 0 Lock = TRUE Busy waiting
+Lock  = FALSE
+Swap (  ),  Key ==False
+Locked by Process 1 Critical section
+Lock  = FALSE
+11
+Bounded-waiting Mutual Exclusion with test_and_set
+For process i: 
+Shared Data structures initialized to FALSE 
+do { • boolean waiting[n]; Pr n wants to enter
+waiting[i] = true;
+• boolean lock; 
+key = true;
+while (waiting[i] && key) 
+key = test_and_set(&lock); The entry section for process i : 
+waiting[i] = false; • First process to execute TestAndSet will find key == 
+false ; ENTER critical section, 
+/* critical section */ 
+• EVERYONE else must wait 
+j = (i + 1) % n; 
+while ((j != i) && !waiting[j]) 
+The exit section for process i: 
+j = (j + 1) % n; 
+Attempts to finding a suitable waiting process j (while 
+if (j == i) 
+loop) and enable it to exit its while loop.
+lock = false; 
+or if there is no suitable process, make lock FALSE.
+else 
+waiting[j] = false; 
+/* remainder section */ 
+} while (true); 
+12
+Mutex Locks
+Previous solutions are complicated and generally 
+inaccessible to application programmers
+OS designers build software tools to solve critical 
+section problem
+Simplest is mutex lock
+Protect a critical section  by first acquire() a lock 
+then release() the lock
+Boolean variable indicating if lock is available or not
+Calls to acquire() and release()must be atomic
+Usually implemented via hardware atomic instructions
+But this solution requires busy waiting
+This lock therefore called a spinlock
+13
+acquire() and release()
+acquire() { release() { 
+while (!available) available = true; 
+; /* busy wait */ } 
+•Usage
+do { 
+acquire lock
+critical section
+release lock 
+remainder section 
+} while (true); 
+14
+acquire() and release()
+Process 0 Lock Process 1
+Start acquire, get lock
+Start acquire
+Critical section Locked by Process 0 Busy waiting
+Release lock
+Gets lock
+Locked by Process 1 Critical section
+Release lock
+15
+acquire() and release()
+Process 0 Lock Process 1
+.. open Attempt to 
+acquire lock
+.. closed Acquires lock
+Attempt to closed Critical 
+acquire lock section
+Attempt to closed Critical 
+acquire lock section
+Attempt to open Release lock
+acquire lock
+Acquires lock closed ..
+Critical closed ..
+section
+16
+How are locks supported by hardware?
+Atomic read-modify-write: Examples
+• Atomic instruction in x86
+– LOCK instruction prefix, which applies to an instruction does a 
+read-modify-write on memory (INC, XCHG, CMPXCHG etc)
+– Ex: lock cmpxchg <dest>, <source>
+• In RISK processors? 
+– Test-and-set in early MIPS
+– Instruction-pairs: Creates an atomic sequence
+• LL (Load Linked Word), SC (Store Conditional Word) instructions in MIPS
+• LDREX, STREX in ARM
+17
+Semaphores by Dijkstra
+• Synchronization tool that provides more sophisticated ways (than Mutex locks)  for 
+process to synchronize their activities.
+• Semaphore S – integer variable
+• Can only be accessed via two indivisible (atomic) operations
+– wait() and signal()
+• Originally called P() and V()based on Dutch words
+• Definition of  the wait() operation
+wait(S) { Waits until 
+while (S <= 0) another process 
+; // busy wait makes S=1
+S--;
+} Binary semaphore:
+• Definition of  the signal() operation When s  is 0 or 1, it is 
+signal(S) { a mutex lock
+S++;
+}
+18
+Wait(S) and Signal (S)
+Process 0 Semaphore S Process 1
+S =1
+Wait(S)
+Wait (S)
+Critical section S =0 Busy waiting
+Signal (S)
+Gets lock, S- -
+S =1
+S =0 Locked by Process 1 Critical section
+Signal (S)
+S =1
+19
+acquire() and release()
+Process 0 Semaphore S Process 1
+Critical 0 wait ( ), busy 
+section waiting
+Signal ( )  S++ 1 Waiting,
+finished
+.. 0 S- -
+Wait( ) 0 Critical 
+section
+Wait( ) 0 Critical 
+section 
+Waiting 1 Signal ( ) S++
+finished
+S-- 0 ..
+Critical 0 ..
+section
+20
+Semaphores
+21
+Semaphore Usage
+• Counting semaphore – integer value can range over an unrestricted 
+domain
+• Binary semaphore – integer value can range only between 0 and 1
+– Practically same as a mutex lock
+• Can solve various synchronization problems
+• Ex: Consider P1 and P2 that requires event S1 to happen before S2
+Create a semaphore “synch” initialized to 0 i.e not available
+P1: P2:
+S1; wait(synch);
+signal(synch); S2;
+• Can implement a counting semaphore S as a binary semaphore
+22
+The counting semaphore 
+• Controls access to a finite set of resources
+• Initialized to the number of resources
+• Usage: 
+– Wait (S): to use a resource
+– Signal (S): to release a resource
+• When all resources are being used: S == 0
+– Block until S > 0 to use the resource
+23
+Semaphore Implementation
+• Must guarantee that no two processes can execute  
+the wait() and signal() on the same semaphore 
+at the same time
+• Thus, the implementation becomes the critical 
+section problem where the wait and signal code 
+are placed in the critical section
+– Could now have busy waiting in critical section 
+implementation
+• But implementation code is short
+• Little busy waiting if critical section rarely occupied
+• Note that applications may spend lots of time in 
+critical sections and therefore this is not a good 
+solution
+• Alternative: block and wakeup (next slide)
+24
+Semaphore Implementation with no Busy waiting 
+• With each semaphore there is an associated waiting queue
+• Each entry in a waiting queue has two data items:
+– value (of type integer)
+– pointer to next record in the list
+• Two operations:
+– block – place the process invoking the operation on the 
+appropriate waiting queue
+– wakeup – remove one of processes in the waiting queue and 
+place it in the ready queue
+• typedef struct{ 
+int value; 
+struct process *list; 
+} semaphore; 
+25
+Implementation with no Busy waiting (Cont.)
+wait(semaphore *S) { If value < 0
+S->value--; abs(value) is the number
+if (S->value < 0) { of waiting processes
+add this process to S->list; 
+block(); 
+typedef struct{ 
+} 
+int value; 
+}
+struct process *list; 
+} semaphore; 
+signal(semaphore *S) { 
+S->value++; 
+if (S->value <= 0) {
+remove a process P from S->list; 
+wakeup(P); 
+} 
+} 
+26
+Deadlock and Starvation
+• Deadlock – two or more processes are waiting 
+indefinitely for an event that can be caused by only one 
+of the waiting processes
+• Let S and Q be two semaphores initialized to 1
+P0 P1
+wait(S); wait(Q);
+wait(Q); wait(S);
+... ...
+signal(S);               signal(Q);
+signal(Q);               signal(S);
+– P0 executes wait(s), P1 executes wait(Q)
+– P0 must wait till P1 executes signal(Q)
+– P1 must wait till P0 executes signal(S)      Deadlock!
+27
+Priority Inversion
+• Priority Inversion – Scheduling problem when 
+lower-priority process PL holds a lock needed by 
+higher-priority process PH.
+– The low priority task may be preempted by a medium 
+priority task  PM  which does not use the lock, causing 
+PH to wait because of PM. Mars pathfinder
+Mission problem  1997
+• Solved via priority-inheritance protocol
+– Process accessing resource needed by higher priority process 
+Inherits higher priority till it finishes resource use
+– Once done, process reverts to lower priority 
+28
+Classical Problems of Synchronization
+• Classical problems used to test newly-proposed 
+synchronization schemes
+– Bounded-Buffer Problem
+– Readers and Writers Problem
+– Dining-Philosophers Problem
+• Monitors
+29
+Bounded-Buffer Problem
+• n buffers, each can hold one item
+• Binary semaphore (mutex) 
+– Provides mutual exclusion for accesses to buffer 
+pool 
+3 semaphores needed,
+– Initialized to 1 1 binary, 2 counting
+• Counting semaphores 
+– empty: Number of empty slots available 
+• Initialized to n 
+– full: Number of filled slots available n 
+• Initialized to 0 
+30
+Bounded-Buffer : Note
+• Producer and consumer must be ready before they 
+attempt to enter critical section 
+• Producer readiness? 
+– When a slot is available to add produced item 
+• wait(empty) 
+empty: Number of empty slots available
+– empty is initialized to n wait(empty) wait until at least 1 empty
+• Consumer readiness? full: Number of filled slots available
+wait(full)  wait until at least 1 full 
+– When a producer has added new item to the buffer 
+• wait(full) 
+– full initialized to 0
+31
+Bounded Buffer Problem (Cont.)
+The structure of the producer process
+do { 
+...
+/* produce an item in next_produced */ 
+... 
+wait(empty);        wait till slot available
+wait(mutex);    Allow producer OR consumer to (re)enter critical section
+...
+/* add next produced to the buffer */ 
+... 
+signal(mutex); Allow producer OR consumer to (re)enter critical section
+signal(full);       signal consumer that a slot is available
+} while (true);
+32
+Bounded Buffer Problem (Cont.)
+The structure of the consumer process
+Do { 
+wait(full); wait till slot available for consumption 
+wait(mutex); Only producer OR consumer can be in critical section 
+...
+/* remove an item from buffer to next_consumed */ 
+... 
+signal(mutex); Allow producer OR consumer to (re)enter critical section
+signal(empty); signal producer that a slot is available to add 
+...
+/* consume the item in next consumed */ 
+...
+} while (true); 
+33
+Readers-Writers Problem
+• A data set is shared among a number of 
+concurrent processes
+– Readers – only read the data set; they do not perform 
+any updates
+– Writers   – can both read and write
+• Problem 
+– allow multiple readers to read at the same time
+– Only one single writer can access the shared data at the 
+same time. No readers permitted when writer is 
+accessing the data.
+• Several variations of how readers and writers are 
+considered  – all involve some form of priorities
+34
+Readers-Writers Problem
+• Shared Data
+– Data set
+– Semaphore rw_mutex initialized to 1  (mutual exclusion 
+for writer)
+– Semaphore mutex initialized to 1     (mutual exclusion for 
+read_count)
+– Integer read_count initialized to 0    (how many readers?)
+35
+Readers-Writers Problem (Cont.)
+• The structure of a writer process
+When: writer in critical section
+and if n readers waiting: 
+do { - 1 reader is queued on rw_mutex
+wait(rw_mutex); - (n-1) readers queued on mutex
+...
+/* writing is performed */ 
+... 
+signal(rw_mutex); 
+} while (true);
+36
+Readers-Writers Problem (Cont.)
+• The structure of a reader process
+do {
+wait(mutex);
+read_count++; mutex for mutual
+if (read_count == 1) exclusion to read_count
+Cannot read wait(rw_mutex); 
+if writer is signal(mutex); When:
+writer in critical section
+writing ... and if n readers waiting
+/* reading is performed */ 1 is queued on rw_mutex
+... (n-1) queued on mutex
+wait(mutex);
+read count--;
+if (read_count == 0) 
+signal(rw_mutex); 
+signal(mutex); 
+} while (true);
+First reader needs to wait for the writer to finish. 
+If other  readers are already reading, a new reader
+Process just goes in.
+37
+Readers-Writers Problem Variations
+• First variation – no reader kept waiting 
+unless writer has already obtained 
+permission to use shared object
+• Second variation – once writer is ready, it 
+performs the write ASAP, i.e. if a writer is 
+waiting, no new readers may start. 
+• Both may have starvation leading to even 
+more variations
+• Problem is solved on some systems by 
+kernel providing reader-writer locks
+38
+Dining-Philosophers Problem
+• Philosophers spend their lives alternating thinking and eating
+• Don’t interact with their neighbors, occasionally try to pick up 2 
+chopsticks (one at a time) to eat from bowl
+– Need both to eat, 
+– then release both when done
+• Each chopstick is a semaphore
+– Grab by executing wait ( )
+– Release by executing signal ( )
+• Shared data 
+• Bowl of rice (data set)
+• Semaphore chopstick [5] initialized to 1
+39
+Dining-Philosophers Problem
+Plato, Confucius, Socrates, Voltaire and Descartes
+40
+Dining-Philosophers Problem Algorithm: Simple solution?
+• The structure of Philosopher i:
+do { 
+wait (chopstick[i] );
+wait (chopStick[ (i + 1) % 5] );
+//  eat
+signal (chopstick[i] );
+signal (chopstick[ (i + 1) % 5] );
+//  think
+} while (TRUE);
+• What is the problem with this algorithm?
+– If all of them pick up the the left chopstick first  -
+Deadlock
+41
+Dining-Philosophers Problem Algorithm (Cont.)
+• Deadlock handling
+– Allow at most 4 philosophers to be sitting 
+simultaneously at  the table (with the same 5 forks).
+– Allow a philosopher to pick up  the forks only if 
+both are available (picking must be done in a critical 
+section.
+– Use an asymmetric solution  -- an odd-numbered  
+philosopher picks  up first the left chopstick and 
+then the right chopstick. Even-numbered  
+philosopher picks  up first the right chopstick and 
+then the left chopstick. 
+42
+Related classes
+• Classes that follow CS370
+– CS455 Distributed Systems  Spring
+– CS457 Networks  Fall
+– CS470 Computer Architecture  Spring
+– CS475 Parallel Programming  Fall
+– CS435: Introduction to Big Data  Spring
+43
+Problems with Semaphores
+• Incorrect use of semaphore operations:
+– Omitting  of wait (mutex) 
+• Violation of mutual exclusion
+– or signal (mutex)
+• Deadlock!
+• Solution: Monitors
+44

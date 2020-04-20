@@ -1,0 +1,530 @@
+CS370 Operating Systems
+Midterm Review
+Yashwant K Malaiya
+Spring 2020
+1 1
+Review for Midterm
+• Closed book, closed notes, no cheat sheets. Calculators 
+without programming/communications are permitted.
+• You must take it with your section. 
+– Sec 1 Morning, Sec 2 Afternoon.
+– SDC students: You should have arrangements with SDC 
+already.
+– Distance students: Sec2 if local or proctor
+• Seating rules: You may not sit in the usual place, not 
+with usual neighbors or teammates/friends. The 
+instructor/TA may reseat someone.
+2
+During midterm
+• You may not leave the room without permission. Some 
+rules apply.
+• The TAs are not permitted to define terms, explain 
+concepts, or provide any assistance that may benefit a 
+single student. No questions permitted during the first 
+15 minutes.
+• Questions on typos or grammar are permitted, and any 
+general clarification will be written on the board, after 
+the instructor is consulted.
+3
+Computer System Structures
+• Computer System Operation
+– Stack for calling functions (subroutines)
+• I/O Structure: polling, interrupts, DMA
+• Storage Structure
+– Storage Hierarchy
+• System Calls and System Programs
+• Command Interpreter
+4
+4
+Process Concept
+– Process - a program in execution
+• process execution proceeds in a sequential fashion
+– Multiprogramming: several programs apparently executing 
+“concurrently”.
+– Process States
+• e.g. new, running, ready, waiting, terminated.
+5
+5
+CPU Switch From Process to Process
+C structure 
+task_struct
+6
+6
+Process Creation
+• Processes are created and deleted dynamically
+• Process which creates another process is called a 
+parent process; the created process is called a child
+process.
+• Result is a tree of processes 
+• e.g. UNIX - processes have dependencies and form a 
+hierarchy.
+• Resources required when creating process
+cid = fork();
+• CPU time, files, memory, I/O devices etc. if (cid < 0) { /* error occurred */
+fprintf(stderr, "Fork Failed\n");
+return 1;
+init
+pid = 1 }
+else if (cid == 0) { /* child process */
+execlp("/bin/ls","ls",NULL);
+}
+login kthreadd sshd else { /* parent process, will wait for child to complete */
+pid = 8415 pid = 2 pid = 3028
+wait(NULL);
+}
+bash khelper pdflush sshd
+pid = 8416 pid = 6 pid = 200 pid = 3610
+tcsch
+ps emacs
+pid = 4005
+pid = 9298 pid = 9204
+7
+7
+Threads
+• A thread (or lightweight process) 
+• basic unit of CPU utilization; it consists of:
+– program counter, register set and stack space
+– A thread shares the following with peer threads:
+– code section, data section and OS resources (open 
+files, signals)
+– Collectively called a task.
+• Thread support in modern systems 
+– User threads vs. kernel threads, lightweight 
+processes
+– 1-1, many-1 and many-many mapping
+• Implicit Threading (e.g. OpenMP)
+• Hardware support in newer processors
+8
+8
+Producer-Consumer Problem
+• Paradigm for cooperating processes; 
+– producer process produces information that is 
+consumed by a consumer process.
+• We need buffer of items that can be filled by 
+producer and emptied by consumer.
+item next_produced; 
+– Unbounded-buffer while (true) { 
+/* produce an item in next produced */ 
+– Bounded-buffer while (((in + 1) % BUFFER_SIZE) == out) 
+; /* do nothing */ 
+Producer and Consumer must synchronize. buffer[in] = next_produced; • in = (in + 1) % BUFFER_SIZE; 
+} 
+Out In
+0 1 2 3 4 5 6 7
+9
+9
+Interprocess Communication (IPC)
+• Mechanism for processes to communicate and 
+synchronize their actions. int fd[2];
+• Via shared memory   create the pipe:
+if (pipe(fd) == -1) {
+• Pipes fprintf(stderr,"Pipe failed");
+return 1;
+• Sockets fork a child process:pid = fork();
+• Via Messaging system - processes parent process:
+/* close the unused end of the pipe */
+communicate without resorting to close(fd[READ_END]);
+shared variables. /* write to the pipe */
+write(fd[WRITE_END], write_msg, strlen(write_msg)+1); 
+/* close the write end of the pipe */
+close(fd[WRITE_END]);
+10
+10
+CPU Scheduling
+• CPU utilization – keep the CPU as 
+busy as possible: Maximize
+• Throughput – # of processes that 
+complete their execution per time 
+unit: Maximize
+• Turnaround time –time to execute a 
+process from submission to 
+completion:  Minimize
+• Waiting time – amount of time a 
+process has been waiting in the 
+ready queue: Minimize
+• Response time –time it takes from 
+when a request was submitted until 
+the first response is produced, not 
+output  (for time-sharing 
+environment): Minimize
+11
+11
+Scheduling Policies
+• FCFS (First Come First Serve)
+– Process that requests the CPU FIRST is allocated the CPU FIRST.
+• SJF (Shortest Job First)
+– Associate with each process the length of its next CPU burst. Use these 
+lengths to schedule the process with the shortest time. 
+• Shortest-remaining-time-first (preemptive SJF)
+– A process preempted by an arriving process with shorter remaining time
+• Priority 
+– A priority value (integer) is associated with each process. CPU allocated 
+to process with highest priority.
+• Round Robin
+– Each process gets a small unit of CPU time
+• MultiLevel
+– ready queue partitioned into separate queues
+– Variation: Multilevel Feedback queues: priority lower or raised based on 
+history
+• Other
+12
+12
+Example of SJF
+ProcessArriva l TimeBurst Time
+P1 0.0 6
+P2 2.0 8
+P3 4.0 7
+P4 5.0 3
+• All arrive at time 0.
+• SJF scheduling chart
+P P P P
+4 1 3 2
+0 3 9 16 24
+• Average waiting time for P1,P2,P3,P4 = (3 + 16 + 9 + 0) / 4 = 7
+13
+Determining Length of Next CPU Burst
+• Can be done by using the length of previous CPU bursts, 
+using exponential averaging
+1.  tn  actual  length of  n
+th CPU  burst
+2.  n1  predicted value for the next CPU  burst
+3.  , 0   1
+4.  Define :    t  1  .n1 n n
+• Commonly, α set to ½
+14
+Example of RR with Time Quantum = 4
+Process Burst Time
+P1 24
+P2 3
+P3 3
+• Arrive a time 0 in order P1, P2, P3: The Gantt chart is: 
+P P P P P P P P
+1 2 3 1 1 1 1 1
+0 4 7 10 14 18 22 26 30
+• Waiting times: P1:10-4 =6, P2:4, P3:7, average 17/3 = 5.66 
+units
+• Typically, higher average turnaround than SJF, but better 
+response
+• q should be large compared to context switch time
+• q usually 10ms to 100ms, context switch overhead < 1%
+Response time: Arrival to beginning of execution:  P2: 4
+Turnaround time: Arrival to finish of execution: P2: 7
+15
+Multiple-Processor Scheduling
+• CPU scheduling more complex when multiple CPUs are 
+available. 
+• Assume Homogeneous processors within a 
+multiprocessor
+• Asymmetric multiprocessing – only one processor 
+accesses the system data structures, alleviating the need 
+for data sharing
+• Symmetric multiprocessing (SMP) – each processor is 
+self-scheduling, 
+– all processes in common ready queue, or 
+– each has its own private queue of ready processes
+• Currently, most common
+• Processor affinity – process has affinity for processor on 
+which it is currently running because of info in cache
+– soft affinity: try but no guarantee
+– hard affinity  can specify processor sets
+16
+Multithreaded Multicore System
+This is temporal multithreading. Simultaneous multithreading allows threads 
+to computer in parallel
+17
+Consumer-producer problem 
+Producer Consumer
+while (true) { while (true) {
+/* produce an item*/ while (counter == 0); 
+while (counter == BUFFER_SIZE) ; /* do nothing */ 
+/* do nothing */ next_consumed = buffer[out]; 
+buffer[in] = next_produced; out = (out + 1) % BUFFER_SIZ
+in = (in + 1) % BUFFER_SIZE; counter--;
+counter++; /* consume the item in 
+} next consumed */ 
+} 
+They run “concurrently” (or in parallel), and are subject to context switches 
+at unpredictable times.  
+18 18
+Race Condition
+counter++ could be compiled as counter-- could be compiled as
+register1 = counter register2 = counter
+register1 = register1 + 1 register2 = register2 - 1
+counter = register1 counter = register2
+They run concurrently, and are subject to context switches at unpredictable times. 
+Consider this execution interleaving with “count = 5” initially:
+S0: producer execute register1 = counter {register1 = 5}
+S1: producer execute register1 = register1 + 1   {register1 = 6}
+S2: consumer execute register2 = counter        {register2 = 5} 
+S3: consumer execute register2 = register2 – 1  {register2 = 4} 
+S4: producer execute counter = register1         {counter = 6 } 
+S5: consumer execute counter = register2        {counter = 4}
+Overwrites!
+19
+The Critical Section Problem 
+– Requirements
+– Mutual Exclusion
+– Progress
+– Bounded Waiting
+– Solution to the critical section problem
+do { 
+acquire lock 
+critical section 
+release lock 
+remainder section 
+} while (TRUE); 
+20
+20
+Peterson’s Algorithm for Process Pi
+do { Being 
+flag[i] = true; nice!
+turn = j; 
+while (flag[j] && turn = = j);  /*Wait*/
+critical section
+flag[i] = false; 
+remainder section 
+} while (true); 
+• The variable turn indicates whose turn it is to enter the critical section
+• flag[i] = true implies that process Pi is ready!
+• Proofs for Mutual Exclusion, Progress, Bounded Wait
+21
+Solution using test_and_set()
+Shared Boolean variable lock, initialized to FALSE
+Solution:
+do {
+while (test_and_set(&lock)) ; /* do nothing */ 
+/* critical section */ 
+…..
+lock = false; 
+/* remainder section */ 
+…  ..
+} while (true);
+22
+Bounded-waiting Mutual Exclusion with test_and_set
+For process i: 
+Shared Data structures initialized to FALSE 
+do { • boolean waiting[n];
+waiting[i] = true;
+• boolean lock; 
+key = true;
+while (waiting[i] && key) 
+key = test_and_set(&lock); The entry section for process i : 
+waiting[i] = false; • First process to execute TestAndSet will find 
+key == false ; ENTER critical section, 
+/* critical section */ 
+• EVERYONE else must wait 
+j = (i + 1) % n; 
+while ((j != i) && !waiting[j]) 
+The exit section for process i: 
+j = (j + 1) % n; 
+Part I: Finding a suitable waiting process j and 
+if (j == i) 
+enable it to get through the while loop, 
+lock = false; 
+or if thre is no suitable process, make lock FALSE.
+else 
+waiting[j] = false; 
+/* remainder section */ 
+} while (true); 
+23
+Mutex Locks
+Protect a critical section  by first acquire()
+a lock then release() the lock •Usage
+Boolean indicating if lock is available or not do { 
+Calls to acquire() and release() must be acquire lock
+atomic critical section
+Usually implemented via hardware atomic release lock 
+instructions remainder section 
+But this solution requires busy waiting } while (true); 
+This lock therefore called a spinlock
+acquire() { release() { 
+while (!available) available = true; 
+; /* busy wait */ } 
+24
+Semaphore
+• Synchronization tool that provides more sophisticated ways (than Mutex locks)  for 
+process to synchronize their activities.
+• Semaphore S – integer variable
+• Can only be accessed via two indivisible (atomic) operations
+– wait() and signal()
+• Originally called P() and V()
+• Definition of  the wait() operation
+wait(S) { 
+while (S <= 0)
+; // busy wait
+S--;
+}
+• Definition of  the signal() operation
+signal(S) { 
+S++;
+}
+25
+Wait(S) and Signal (S)
+Process 0 Semaphore S Process 1
+S =1
+Wait(S)
+Wait (S)
+Critical section S =0 Busy waiting
+Signal (S)
+Gets lock, S- -
+S =1
+S =0 Locked by Process 1 Critical section
+Signal (S)
+S =1
+26
+Readers-Writers Problem (Cont.)
+• The structure of a reader process
+do {
+wait(mutex);
+read_count++; mutex for mutual
+if (read_count == 1) exclusion to readcount
+wait(rw_mutex); 
+signal(mutex); When:
+writer in critical section
+... and if n readers waiting
+/* reading is performed */ 1 is queued on rw_mutex
+... (n-1) queued on mutex
+wait(mutex);
+read count--; The structure of a writer process
+if (read_count == 0) 
+do {
+signal(rw_mutex); wait(rw_mutex); 
+...
+signal(mutex); /* writing is performed */ 
+} while (true); ... 
+signal(rw_mutex); 
+} while (true);
+27
+Implementation with no Busy waiting (Counting Sema)
+wait(semaphore *S) { 
+S->value--; 
+if (S->value < 0) {
+add this process to S->list; 
+block(); 
+typedef struct{ 
+} 
+int value; 
+}
+struct process *list; 
+} semaphore; 
+signal(semaphore *S) { 
+S->value++; 
+if (S->value <= 0) {
+remove a process P from S->list; 
+wakeup(P); 
+} 
+} 
+28
+Monitors and Condition Variables
+monitor monitor-name
+{
+// shared variable declarations
+procedure P1 (…) { …. }
+procedure Pn (…) {……}
+Initialization code (…) { … }
+}
+}
+The condition construct
+• condition x, y;
+• Two operations are allowed on a condition variable:
+– x.wait() – a process that invokes the operation is suspended 
+until x.signal() 
+– x.signal() – resumes one of processes (if any) that invoked
+x.wait()
+• If no x.wait() on the variable, then it has no effect on the 
+variable. Signal is lost.
+29
+The pickup() and putdown()   operations
+monitor DiningPhilosophers
+{ 
+enum { THINKING, HUNGRY, EATING} state [5] ;
+condition self [5];
+void pickup (int i) { 
+state[i] = HUNGRY;
+test(i);   //on next slide
+if (state[i] != EATING) self[i].wait;
+}
+void putdown (int i) { 
+state[i] = THINKING;
+// test left and right neighbors
+test((i + 4) % 5);
+test((i + 1) % 5);
+} void test (int i) { 
+if ((state[(i + 4) % 5] != EATING) &&
+(state[i] == HUNGRY) &&
+(state[(i + 1) % 5] != EATING) ) { 
+state[i] = EATING ;
+self[i].signal () ;
+}
+}
+initialization_code() { 
+for (int i = 0; i < 5; i++)
+state[i] = THINKING;
+}
+}
+30
+Deadlocks
+• System Model 
+• Resource allocation graph, claim 
+graph (for avoidance)
+• Deadlock Characterization
+– Conditions for deadlock - mutual 
+exclusion, hold and wait, no 
+preemption, circular wait.
+• Methods for handling 
+deadlocks
+• Deadlock Prevention
+• Deadlock Avoidance At this point, two minimal cycles exist in 
+• Deadlock Detection the system: 
+P1→ R1→ P2→ R3→ P3→ R2→ P1 
+• Recovery from Deadlock P2→ R3→ P3→ R2→ P2 
+– Combined Approach to Deadlock Processes P1, P2, and P3 are 
+Handling deadlocked. 
+Principles of Operating Systems - 31
+31 I/O Structures and Storage
+Deadlock Prevention
+– If any one of the conditions for deadlock (with reusable 
+resources) is denied, deadlock is impossible.
+– Restrain ways in which requests can be made
+• Mutual Exclusion  - cannot deny (important)
+• Hold and Wait - guarantee that when a process requests a resource, it 
+does not hold other resources.
+• No Preemption 
+– If a process that is holding some resources requests another 
+resource that cannot be immediately allocated to it, the process 
+releases the resources currently being held.
+• Circular Wait
+– Impose a total ordering of all resource types. 
+Principles of Operating Systems - 32
+32 I/O Structures and Storage
+Deadlock avoidance: Safe states 
+• If the system can:  
+– Allocate resources to each process in some order 
+• Up to the maximum for the process 
+– Still avoid deadlock 
+– Then it is in a safe state
+• A system is safe ONLY IF there is a safe 
+sequence 
+• A safe state is not a deadlocked state 
+– Deadlocked state is an unsafe state 
+– Not all unsafe states are deadlock
+33
+Example A: Assume 12 Units in the system 
+At time T0 (shown):
+Max need Current holding 9 units allocated
+P0 10 5 3 (12-9) units available 
+P1 4 2
+A unit could be a drive, 
+P2 9 2 a block of memory etc.
+• Is the system at time T0 in a safe state?
+– Try sequence  <P1, P0 , P2> 
+– P1 can be given 2 units
+– When P1 releases its resources; there are now 5 available units
+– P0 uses 5 and subsequently releases them (10 available now) 
+– P2 can then proceed. 
+• Thus <P1, P0 , P2> is a safe sequence, and at T0 
+system was in a safe state More detailed look
+34
+Review of the Example Problems
+• Use the MS Word solutions document.
+35

@@ -1,0 +1,207 @@
+CS 370: Operating Systems  Spring 2020 
+Colorado State University   INSTRUCTOR: Yashwant K Malaiya/Jack Applin 
+ 
+CS370 Operating Systems 
+Spring 2020 Term Project   v. 02.15.2020 
+You have two options.   
+A. Research: You will research a topic of current interest and at the end prepare a term Project 
+Report.  You will also produce a presentation for the benefit of fellow students. The presentation 
+will take the form slides and a poster presentation (if logistics permit). The objective of this project 
+is for you to explore the state of the art relating to some of the topics in the class.  
+B. Development: Design and implement a new embedded/IoT application using a single-board 
+computer (like a Raspberry Pi or an alternative), which implements the required features. You 
+must formulate, design, implement and evaluate the system yourself. Your report should provide 
+a good documentation.  
+Deadlines:  The due dates for both options for the deliverables D1 to D5 are given below. They are subject 
+to revision based on logistics.  
+Deliverable Date Points 
+D1 Team composition and idea proposal 2/27/2020 Th 5% 
+D2 Progress report 4/2/2020 Th 15% 
+D3 Slides and final reports 4/30/2020 Th 75%* 
+D4 Posters or Demos 5/5 or 5/7 T or Th * 
+D5: Peer Reviews 5/9/2020 Sat 5% 
+ 
+This assignment would be worth 10 points towards your final grade. D3 and D4 combined are worth 75%. 
+This includes your participation in viewing the work of other fellow students and participation in the 
+related events. 
+Forming the groups:  You can take the lead and try to form a group (by advertising it on Piazza), or join a 
+group others are trying to form. A group will have 2 or 3 students (4 with permission). You can claim a 
+topic as your own by mentioning it on Piazza with the topic clearly identified in the post title (for example 
+“Research Topic 3: Simultaneous multithreading scheduling and performance”).  All members of a group 
+must join a formal Canvas group, the progress report and the final report will be group submissions on 
+canvas. 
+All submissions will be using Canvas, with the exception of the slides that will be shared on Piazza.  The 
+final report for both options will be in two-column format used by IEEE/ACM.  
+Citations:  Citations (1) relate to work that has been published elsewhere, (2) substantiate your claims, 
+and (3) could be used by readers to dig a little deeper. Remember to number your references and list 
+them in your bibliography in the order they are referenced throughout the paper. If an article is in your 
+bibliography, it must cited in the main text. Citing at the right location indicates what your source is for a 
+particular piece of information, and also demonstrates that you have read the article. Make sure that you 
+cite all your references including Wikipedia and Online lecture notes that you may have perused. 
+References that are not cited should not be in your bibliography. 
+ 
+CS 370: Operating Systems  Spring 2020 
+Colorado State University   INSTRUCTOR: Yashwant K Malaiya/Jack Applin 
+ 
+Option A Research:  Detailed information 
+The research term paper will be based on a comprehensive study of a particular topic related to the 
+current state of technology and recent trends. You are required to formulate your own views of the topic 
+once you have understood the concept well. You will also mention how you expect things to evolve in the 
+future. 
+List of recommended topics: You may choose from the list below. If you want you may choose slightly 
+different topics after consulting with the instructor.   
+ 
+Multicore Processors:  
+ 
+1. Multicore schedulers 
+2. Resource management. How to utilize and manage computational resources in multicore systems. 
+3. Virtualization in multicore systems. 
+ 
+Virtualization: 
+4. Storage virtualization (e.g. Instance Store, Elastic Block Storage, others) 
+5. Security issues in hypervisors 
+6. Live migration of Virtual Machines 
+7. Virtualization schedulers comparison (e.g. Xen SEDF, Credit, BVT) 
+ 
+Multithreading: 
+8. Simultaneous multithreading: evolution/status/future 
+9. Multithreading vs Multicore: systematic detailed examination 
+ 
+Cloud as a system element:  (Note: Do not do a survey of cloud computing.) 
+10. Serverless architecture 
+11. Microservices - development and verification 
+12. Containers/clusters/edge/fog computing: in-depth technical discussion of one or more. 
+13. Cloud gaming  performance evaluation  
+14. Evaluation of disaster recovery using virtualization 
+Embedded/IoT systems:  
+15. Testing approaches for embedded system software/hardware 
+16. IoT reliability evaluation 
+17. IoT security issues and possible mitigation 
+Special topics: 
+18. Blockchain/ Cryptocurrency-oriented  operating systems 
+19. Completely Fair Scheduler and its performance 
+20. Newer files systems: technical details of Ext4 and HDFS (you will need to go beyond what we will do 
+in the class. Ask me for a preliminary set of slides). 
+CS 370: Operating Systems  Spring 2020 
+Colorado State University   INSTRUCTOR: Yashwant K Malaiya/Jack Applin 
+ 
+21. Emerging storage technologies and associated file systems 
+D1: Detailed Abstract: 
+The first deliverable of the term paper is a detailed abstract, around 1000 words. It should include a 
+brief description of the topic and include a minimum of 6-8 total citations of appropriate papers or 
+references.  
+It must have the following components: 
+1. Why is this particular topic important now? Why did you choose it? 
+2. Why will this be important in the future? 
+3. A history of how this aspect has evolved in the past? The driving forces behind this. 
+4. A quick snapshot of the current state of the art for this particular aspect. 
+Items (3) and (4) should cite at least 5-6 references. 
+D2: Progress report:  It should report on the progress and what the final report is expected to contain.  All 
+the references used (at least 8-10) should be cited. Before submitting the Progress Report, you must join 
+a Canvas group along with your group members. The Progress Report will be submitted as a group 
+document. You must include enough material from the proposal to ensure that the Progress Report can 
+be read without having to look at the proposal. 
+ 
+D3: Final Report: 
+The finished term paper should be approximately 4000 words and include a minimum of 10-15 total 
+references supporting the paper. The final term paper must be coherent, succinct, and readable. It 
+should include the following: 
+1. Abstract: Compact one-paragraph overview of the project. 
+2. An introduction that outlines the rationale, organization, and key contributions of the term 
+paper. 
+3. A literature survey of the topics that contrasts different approaches to the problem. 
+4. Limitations in the current approaches that may not be suitable in the future, and potential 
+improvements. 
+5. At least some non-text elements – figures, tables, mathematical analysis, algorithms etc. 
+6. A conclusion that includes assertions about the state of the art of the topic that you have 
+surveyed. This will also include 4-5 key assertions about what you expect things to look like in 
+the next 2-4 years. 
+Also note that a peer review of (a) people in your team and (b) some of projects of other groups will be 
+required. 
+ 
+D4: Presentation: The presentation will take the form of a PowerPoint presentation and a poster 
+(depending on logistics).  Details will be provided later after the department has scheduled the poster 
+sessions. 
+D5: Peer review of a specific number of presentations (and contributions of members of your team). 
+Details and the form to be used will be provided later. 
+CS 370: Operating Systems  Spring 2020 
+Colorado State University   INSTRUCTOR: Yashwant K Malaiya/Jack Applin 
+ 
+ 
+Option B Development: Detailed information 
+As part of this Term Project option, you will be developing and evaluating a system built using a single-
+board computer.   
+Requirements: 
+Project must involve a single board computer (such as a Raspberry Pi) with Wi-Fi capability which must 
+have the capability of having an operating system installed on it.  The board must be capable of running 
+all the project requirements satisfactorily 
+The board will communicate with at least one other computer (another board, laptop or networked 
+computer) and with at least one sensing device (sensor (temperature, pressure, location etc.), camera or 
+a computation device supplying data). Optionally it can have an actuator to control mechanical 
+movements.  After you have built your system, will evaluate for at least one attribute (potential security 
+holes, power consumption, available resolution or reliability). 
+You can use this document from a previous semester as a guide for setting up your board. (It is 
+Raspberry Pi specific. You need to locate similar information for other boards.) 
+D1. Team composition and idea proposal 
+ 
+You will specify the project objective, select the appropriate board, and specific hardware and software 
+needed. Your proposal must include a one paragraph justification of the choices. A back-of-napkin 
+drawing can be included. Identify from where the board will be ordered (Please ensure that you will 
+receive it within a week or so), and how you will obtain the needed software and documentation, and 
+the expected cost. 
+D2. Progress report  
+ 
+At this point you must have acquired and installed all the software and hardware needed and should have 
+made some progress in developing the code needed.  You need to include proof that you have acquired 
+the board and any hardware needed. The report will describe the status of the project. You should also 
+mention which attribute of your project you propose to evaluate.  You must evaluate at least two of these, 
+using quantitative information (that you have to dig out). 
+ 
+ Limitations like resolution, accuracy or response time 
+ Potential security holes  and how they can be mitigated 
+ Power consumption estimates/measurements of the device 
+ Cost and marketability of a device based on your project 
+ 
+You evaluation must be based on some hard data/analysis/experiments. 
+ 
+You must include enough material from the proposal to ensure that the Progress Report can be read 
+without having to look at the proposal. 
+ 
+Before submitting the Progress Report, you must join a Canvas group along with your group members. 
+The Progress Report will be submitted as a group document. 
+CS 370: Operating Systems  Spring 2020 
+Colorado State University   INSTRUCTOR: Yashwant K Malaiya/Jack Applin 
+ 
+ 
+D3. Final report and demo:  
+ 
+You will demonstrate your project to a TA for about 10-15 minutes. You will need to make an appointment. 
+You can use photos and videos if they will help.  You will also need to demonstrate your project to fellow 
+students in the class. 
+ 
+The final report that you will submit will be a complete documentation of your project. In addition, the 
+code developed will also need to be submitted. 
+ 
+This report should be between 1500-2500 words excluding references. The report must include several 
+elements, each of which will be a separate section. These include: 
+ 
+ Abstract: Compact one-paragraph overview of the project. 
+ Introduction 
+ Problem characterization- This is a technical description of the problem. Your audience is 
+your peers so present it in a way that they can appreciate. 
+ Proposed solution and implementation strategy. Include i. Methodology and ii. a 
+description of the libraries that you have used and what you did on your own. 
+ Conclusions 
+ Bibliography 
+ 
+ 
+D4. Summary report in form of slides  
+ 
+A set of slides will be needed to be shared with the rest of the class. 
+ 
+D5: Peer review of a specific number of presentations (and contributions of members of your team). 
+Details and the form to be used will be provided later. 
+ 
+ 
+Updates: Any updates will be mentioned below. 
+ 
