@@ -1,6 +1,7 @@
 import praw
 import datetime
 from Utils.contentGeneration import CS370InANutshell
+import os
 
 
 def makePostTitle(cl):
@@ -15,7 +16,14 @@ def makePostText(cl):
 
 
 def selfPost(cl=0):
-    reddit = praw.Reddit('bot1')
+    if os.environ['DEPLOYED']:
+        reddit = praw.Reddit(client_id=os.environ['CLIENT_ID'],
+                             client_secret=os.environ['CLIENT_SECRET'],
+                             password=os.environ['PASSWORD'],
+                             username=os.environ['USERNAME'],
+                             user_agent=os.environ['USER_AGENT'])
+    else:
+        reddit = praw.Reddit('bot1')
     sub = reddit.subreddit('u_quality-content-bot')
     sub.submit(title=makePostTitle(cl), selftext=makePostText(cl))
 
