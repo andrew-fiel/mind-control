@@ -1,4 +1,5 @@
-from flask import Flask, render_template, jsonify
+from flask import Flask, render_template, jsonify, request
+from redditBot import selfPost
 app = Flask(__name__)
 
 powered = False
@@ -9,16 +10,18 @@ def hello():
     return render_template("base.html")
 
 
-@app.route('/api/signalOn', methods=['POST'])
+@app.route('/api/reddit', methods=['POST'])
 def outletOn():
-    return jsonify({'newState': "on",
-                    'success': True})
+    return processRedditRequest(request.form['key'], request.form['concentration'])
 
 
-@app.route('/api/signalOff', methods=['POST'])
-def outletOff():
-    return jsonify({'newState': "off",
-                    'success': True})
+def processRedditRequest(key, cl):
+    if (key == "apples"):
+        selfPost(cl)
+        success = 'true'
+    else:
+        success = 'false'
+    return jsonify({'success': success})
 
 
 if __name__ == '__main__':
