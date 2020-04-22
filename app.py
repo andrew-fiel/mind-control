@@ -17,7 +17,7 @@ def outletOn():
 
 def processRedditRequest(key, cl):
     if (key == "apples"):
-        selfPost(cl)
+        selfPost(int(cl))
         success = 'true'
     else:
         success = 'false'
