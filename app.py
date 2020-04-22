@@ -1,5 +1,6 @@
 from flask import Flask, render_template, jsonify, request
 from redditBot import selfPost
+import os
 app = Flask(__name__)
 
 powered = False
@@ -16,7 +17,7 @@ def outletOn():
 
 
 def processRedditRequest(key, cl):
-    if (key == "apples"):
+    if (key == os.environ['REQUEST_KEY']):
         selfPost(int(cl))
         success = 'true'
     else:
