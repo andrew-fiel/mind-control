@@ -3,6 +3,43 @@
   <head>
     <meta charset="utf-8" name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mind control</title>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    <script type="text/javascript">
+      $(function() {
+        $('#redditPost').bind('click', function() {
+          $(this).prop("disabled", true);
+          let data = {"value": $("#rangeSlider").val()}
+          $.getJSON('/redditButtonOnClick', data, function(respData) {
+          });
+        });
+      });
+      $(function() {
+        $('#rangeSlider').change(function() {
+          $('#redditPost').prop("disabled", false);
+        });
+      });
+    </script>
   </head>
-    <h1>What is up my guy</h1>
+    <div class="container">
+      <div class="row">
+        <div class="col-*-* text-center">
+          <h1>Reddit Post Demo</h1>
+        </div>
+      <div class="row">
+        <div class="col-*-* text-center">
+          <button type="button" class="btn btn-info" id="redditPost">Post</button>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-*-*">
+          <form oninput="valLabel.value=parseInt(rangeSlider.valueAsNumber)" class="text-center">
+            <output name="valLabel" for="rangeSlider">50</output>
+            <input type="range" min="0" max="100" value="50" class="slider mt-2" id="rangeSlider">
+          </form>
+        </div>
+      </div>
+    </div>
 </html>
