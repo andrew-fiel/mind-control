@@ -11,6 +11,7 @@ class CS370InANutshell:
     def makeChain(self):
         # clean files
         corpus = ""
+        # open all .txt files in the listed directory
         file_names = glob.glob('./Utils/lectureTextFiles/*.txt')
         for file_name in file_names:
             with open(file_name, 'r') as f:
@@ -19,19 +20,19 @@ class CS370InANutshell:
         corpus = corpus.replace('\t', ' ')
         corpus = corpus.replace('“', ' " ')
         corpus = corpus.replace('”', ' " ')
+        # added to list as found in testing
         for removed in ['—', '°', '|', '-', '•', '', ':', '}', '{', '"', ''
-                        ';', ')', '(', '=', '+', '%', '<', '>', '#']:
+                        ';', ')', '(', '=', '+', '%', '<', '>', '#', '–', 'U+F06C']:
             corpus = corpus.replace(removed, '')
         for spaced in ['.', ',', '!', '?']:
             corpus = corpus.replace(spaced, ' {0} '.format(spaced))
         corpus_words = corpus.split(' ')
+        # onlu use words that are not blank or numbers
         corpus_words = [word for word in corpus_words if word != '' and not word.isdecimal()]
-        print("Total of " + str(len(corpus_words)) + " words.")
 
         # train
         self.distinct_words = list(set(corpus_words))
         word_idx_dict = {word: i for i, word in enumerate(self.distinct_words)}
-        print("Total of " + str(len(self.distinct_words)) + " unique words.")
         k = 2
         self.sets_of_k_words = [' '.join(corpus_words[i:i+k]) for i, _ in enumerate(corpus_words[:-k])]
         sets_count = len(list(set(self.sets_of_k_words)))
@@ -45,11 +46,13 @@ class CS370InANutshell:
             next_word_idk = word_idx_dict[corpus_words[i+k]]
             self.next_after_k_words_matrix[word_sequence_idx, next_word_idk] += 1
 
+    # select a the next word based on the preious and the likelihood that the word appears
     def sample_next_word_after_sequence(self, word_sequence, alpha=0):
         next_word_vector = self.next_after_k_words_matrix[self.k_words_idx_dict[word_sequence] + alpha]
         likelihoods = next_word_vector/next_word_vector.sum()
         return choice(self.distinct_words, p=likelihoods.toarray()[0])
 
+    # make a chain of words that fit the given lengths
     def stochastic_chain(self, seed, max_length=50, min_length=20, seed_length=2):
         current_words = seed.split(' ')
         if len(current_words) != seed_length:
@@ -57,7 +60,7 @@ class CS370InANutshell:
         sentence = seed
 
         length = 0
-        next_word = 'Start'
+        next_word = 'Start'  # arbitrary value since it is overwritten
         while (length < max_length and (next_word != '.' or length < min_length)):
             sentence += ' '
             next_word = self.sample_next_word_after_sequence(' '.join(current_words))
@@ -66,11 +69,13 @@ class CS370InANutshell:
             length += 1
         return sentence
 
+    # finds a starting point that is not a period or comma so that the output looks better
+    # uses a max_attempts value because the random nature of selection could take forever
     def getSeed(self, max_attempts=20):
         attempts = 0
         seed = random.choice(self.sets_of_k_words)
         while (attempts < max_attempts and
-               (seed[0] == ',' or seed[0] == '—' or seed[0] == '.')):
+               (seed[0] == ',' or seed[0] == '.')):
             seed = random.choice(self.sets_of_k_words)
             attempts += 1
         return seed

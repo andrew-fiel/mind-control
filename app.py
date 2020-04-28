@@ -3,19 +3,19 @@ from redditBot import selfPost
 import os
 app = Flask(__name__)
 
-powered = False
-
 
 @app.route('/')
 @app.route('/login')
 def login():
+    # simple check for access credentials
     if (request.authorization and request.authorization.username == os.environ['MC_USER'] and request.authorization.password == os.environ['MC_PASS']):
+        # simple webpage to manually post without requests
         return render_template("base.html")
     return make_response('Could not verify!', 401, {'WWW-Authenticate': 'Basic realm="Login Required"'})
 
-
+# avenue for dealing with requests from the headset
 @app.route('/api/reddit', methods=['POST'])
-def outletOn():
+def headsetPostRequest():
     if (validateRedditRequest(request)):
         selfPost(int(request.form['concentration']))
         return jsonify({'success': 'true'})
@@ -27,7 +27,7 @@ def validateRedditRequest(req):
         return True
     return False
 
-
+# AJAX function calls this on web ui interaction
 @app.route('/redditButtonOnClick', methods=['GET'])
 def redditButtonOnClick():
     if request.authorization and request.authorization.username == os.environ['MC_USER'] and request.authorization.password == os.environ['MC_PASS']:
