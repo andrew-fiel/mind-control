@@ -11,6 +11,7 @@
       $(function() {
         $('#redditPost').bind('click', function() {
           $(this).prop("disabled", true);
+          alert("Post sent. Change the cl to post again.")
           let data = {"value": $("#rangeSlider").val()}
           $.getJSON('/redditButtonOnClick', data, function(respData) {
           });

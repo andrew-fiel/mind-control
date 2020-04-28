@@ -18,7 +18,7 @@ def makePostText(cl):
 
     # return content of future reddit post
     return (bodyText +
-            "\n\nThought up at " + endTime.strftime("%A, %B %d, %Y @ %I:%M:%S:%f %p %Z") +
+            "\n\nThought up on " + endTime.strftime("%A, %B %d, %Y @ %I:%M:%S:%f %p %Z") +
             "\n\nTook " + str(timeDif.seconds) + "." + str(timeDif.microseconds) + " seconds to generate.")
 
 
