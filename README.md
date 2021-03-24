@@ -8,7 +8,7 @@ The content of the posts comes from Markov Chains based on CSU's cs370 lecture s
 
 [Posts Made Here](https://www.reddit.com/user/quality-content-bot/)
 
-[Hosted here](https://mind-control-csu.herokuapp.com/)
+<!-- [Hosted here](https://mind-control-csu.herokuapp.com/) -->
 
 ---
 
